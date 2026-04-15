@@ -4,11 +4,15 @@ import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from 're
 import {
   ChartBarHorizontal, Users, IdentificationCard, ShieldCheck,
   Trash, Gear, Trophy, Plus, X, CheckCircle, XCircle, SignOut,
-  Leaf, HandHeart, Money, WarningCircle, DotsThree, Pencil
+  Leaf, HandHeart, Money, WarningCircle, DotsThree, Pencil,
+  House, ClipboardText, FileArrowDown
 } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import axiosClient from './api/axiosClient';
 import { useAuthStore } from './store/useAuthStore';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import './i18n';
 
 /* ─────────────────────────────────────────
@@ -45,15 +49,18 @@ const OWNER_PRIMARY = [
 const OWNER_MORE = [
   { to: '/members',    icon: Users,              key: 'members'     },
   { to: '/employees',  icon: IdentificationCard, key: 'employees'   },
+  { to: '/survey-results', icon: ClipboardText,   key: 'survey_dashboard' },
   { to: '/leaderboard',icon: Trophy,             key: 'leaderboard' },
   { to: '/settings',   icon: Gear,               key: 'settings'    },
   { to: '/requests',   icon: HandHeart,          key: 'edit_requests'},
 ];
 const EMPLOYEE_PRIMARY = [
   { to: '/',       icon: ChartBarHorizontal, key: 'dashboard' },
+  { to: '/survey', icon: ClipboardText,      key: 'collect_data' },
+];
+const EMPLOYEE_MORE = [
   { to: '/members',icon: Users,              key: 'members'   },
 ];
-const EMPLOYEE_MORE = [];
 
 const ALL_SIDEBAR_NAV = [...OWNER_PRIMARY, ...OWNER_MORE];
 
@@ -67,12 +74,12 @@ const Sidebar = () => {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
-        <div className="sidebar-brand-icon">
-          <div className="sidebar-icon-wrap"><Leaf size={18} color="white" weight="fill" /></div>
-          <h2>{t('brand_name')}</h2>
+      <div className="sidebar-brand" style={{ display:'flex', alignItems:'center', gap:10, paddingBottom:20 }}>
+        <img src="/logo.png" alt="PBL Sheba" style={{ width:36, height:36, borderRadius:8 }} />
+        <div style={{ display:'flex', flexDirection:'column' }}>
+          <h2 style={{ fontSize:'1.1rem', margin:0, fontWeight:900, letterSpacing:'-0.02em' }}>{t('brand_name')}</h2>
+          <p style={{ fontSize:'0.75rem', margin:0, color:'var(--text-muted)', fontWeight:500 }}>{t('brand_tagline')}</p>
         </div>
-        <p>{t('brand_tagline')}</p>
       </div>
       <nav className="sidebar-nav">
         {navItems.map(({ to, icon: Icon, key }) => (
@@ -101,9 +108,9 @@ const TopBar = () => {
   const { logout } = useAuthStore();
   return (
     <header className="top-bar">
-      <div className="top-bar-brand">
-        <div className="top-bar-icon"><Leaf size={15} color="white" weight="fill" /></div>
-        {t('brand_name')}
+      <div className="top-bar-brand" style={{ display:'flex', alignItems:'center', gap:8 }}>
+        <img src="/logo.png" alt="Logo" style={{ width:26, height:26, borderRadius:6 }} />
+        <span style={{ fontWeight:800, fontSize:'0.95rem' }}>{t('brand_name')}</span>
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <LangToggle />
@@ -731,6 +738,284 @@ const EditRequests = () => {
 };
 
 /* ─────────────────────────────────────────
+   SURVEY FORM (House-to-House)
+───────────────────────────────────────── */
+const SurveyForm = () => {
+  const { t } = useTranslation();
+  const [form, setForm] = useState({
+    name: '', fathersName: '', wardNo: '', farmAnimals: '', farmableLand: '',
+    houseType: 'tin_shed', familyMembers: '', gender: 'male', childrenBoy: '',
+    childrenGirl: '', monthlyIncome: '', phone: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axiosClient.post('/surveys', form);
+      setSuccess(true);
+      setForm({
+        name: '', fathersName: '', wardNo: '', farmAnimals: '', farmableLand: '',
+        houseType: 'tin_shed', familyMembers: '', gender: 'male', childrenBoy: '',
+        childrenGirl: '', monthlyIncome: '', phone: ''
+      });
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error submitting survey');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div>
+          <h1>{t('house_house')}</h1>
+          <p className="text-muted">{t('collect_data')}</p>
+        </div>
+      </div>
+
+      <div className="card-list" style={{ maxWidth: 600, margin: '0 auto' }}>
+        <div className="data-card" style={{ padding: 20 }}>
+          {success && (
+            <div className="alert-success" style={{ marginBottom: 20 }}>
+              <CheckCircle size={18} weight="fill" /> {t('success_survey')}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="form-group">
+              <label className="form-label">{t('name_label')} *</label>
+              <input className="form-input" value={form.name} onChange={e => set('name', e.target.value)} required />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">{t('fathers_husband_label')}</label>
+              <input className="form-input" value={form.fathersName} onChange={e => set('fathersName', e.target.value)} />
+            </div>
+
+            <div className="m-grid m-grid-2">
+              <div className="form-group">
+                <label className="form-label">{t('ward_label')} *</label>
+                <input className="form-input" value={form.wardNo} onChange={e => set('wardNo', e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('phone_label')} *</label>
+                <input className="form-input" type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} required />
+              </div>
+            </div>
+
+            <div className="m-grid m-grid-2">
+              <div className="form-group">
+                <label className="form-label">{t('house_type_label')}</label>
+                <select className="form-input" value={form.houseType} onChange={e => set('houseType', e.target.value)}>
+                  <option value="tin_shed">{t('tin_shed')}</option>
+                  <option value="brick_built">{t('brick_built')}</option>
+                  <option value="mud_house">{t('mud_house')}</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('gender_label')}</label>
+                <select className="form-input" value={form.gender} onChange={e => set('gender', e.target.value)}>
+                  <option value="male">{t('male')}</option>
+                  <option value="female">{t('female')}</option>
+                  <option value="other">{t('other')}</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="m-grid m-grid-2">
+              <div className="form-group">
+                <label className="form-label">{t('family_members_label')}</label>
+                <input className="form-input" type="number" value={form.familyMembers} onChange={e => set('familyMembers', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('income_label')}</label>
+                <input className="form-input" type="number" value={form.monthlyIncome} onChange={e => set('monthlyIncome', e.target.value)} />
+              </div>
+            </div>
+
+            <div className="m-grid m-grid-2">
+              <div className="form-group">
+                <label className="form-label">{t('children_boy_label')}</label>
+                <input className="form-input" type="number" value={form.childrenBoy} onChange={e => set('childrenBoy', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('children_girl_label')}</label>
+                <input className="form-input" type="number" value={form.childrenGirl} onChange={e => set('childrenGirl', e.target.value)} />
+              </div>
+            </div>
+
+            <div className="m-grid m-grid-2">
+              <div className="form-group">
+                <label className="form-label">{t('farm_animals_label')}</label>
+                <input className="form-input" value={form.farmAnimals} onChange={e => set('farmAnimals', e.target.value)} placeholder="e.g. 2 Cows, 5 Hens" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('farmable_land_label')}</label>
+                <input className="form-input" value={form.farmableLand} onChange={e => set('farmableLand', e.target.value)} placeholder="e.g. 10 Decimals" />
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-full" style={{ height: 48, marginTop: 10 }} disabled={loading}>
+              {loading ? t('saving') : <><ClipboardText size={18} style={{ marginRight: 8 }} /> {t('submit_survey')}</>}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─────────────────────────────────────────
+   SURVEY DASHBOARD (Owner Results)
+───────────────────────────────────────── */
+const SurveyDashboard = () => {
+  const { t } = useTranslation();
+  const [list, setList] = useState([]);
+  const [stats, setStats] = useState([]);
+  const [filter, setFilter] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axiosClient.get(`/surveys?employeeId=${filter}`);
+      setList(data);
+      const { data: sData } = await axiosClient.get('/surveys/stats');
+      setStats(sData);
+    } catch {
+      alert('Error fetching survey data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, [filter]);
+
+  const exportPDF = () => {
+    const doc = new jsPDF('landscape');
+    doc.text('PBL Sheba - Socio-Economic Survey Report', 14, 15);
+    
+    const tableData = list.map((s, index) => [
+      index + 1,
+      s.name,
+      s.phone,
+      s.wardNo,
+      s.houseType,
+      s.familyMembers,
+      s.monthlyIncome,
+      s.submittedBy?.name || 'Self'
+    ]);
+
+    doc.autoTable({
+      head: [['SL', 'Name', 'Phone', 'Ward', 'House', 'Family', 'Income', 'Collected By']],
+      body: tableData,
+      startY: 25,
+      styles: { fontSize: 8 }
+    });
+
+    doc.save(`PBL_Sheba_Surveys_${new Date().toLocaleDateString()}.pdf`);
+  };
+
+  const exportExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(list.map(s => ({
+      'SL': '',
+      'Name': s.name,
+      'Phone': s.phone,
+      'Father/Husband': s.fathersName,
+      'Ward No': s.wardNo,
+      'House Type': s.houseType,
+      'Family Members': s.familyMembers,
+      'Monthly Income': s.monthlyIncome,
+      'Gender': s.gender,
+      'Boys': s.childrenBoy,
+      'Girls': s.childrenGirl,
+      'Animals': s.farmAnimals,
+      'Farmable Land': s.farmableLand,
+      'Submitted By': s.submittedBy?.name || 'Self',
+      'Date': new Date(s.createdAt).toLocaleDateString()
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Surveys");
+    XLSX.writeFile(wb, `PBL_Sheba_Surveys_${new Date().toLocaleDateString()}.xlsx`);
+  };
+
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div>
+          <h1>{t('survey_dashboard')}</h1>
+          <p className="text-muted">{list.length} {t('surveys')}</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-outline btn-sm" onClick={exportPDF}>
+            <FileArrowDown size={18} /> PDF
+          </button>
+          <button className="btn btn-outline btn-sm" onClick={exportExcel}>
+            <FileArrowDown size={18} /> XLSX
+          </button>
+        </div>
+      </div>
+
+      {/* Stats bar */}
+      <div style={{ marginBottom: 24 }}>
+        <span className="section-eyebrow-sm">{t('survey_stats')}</span>
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, marginTop: 8 }}>
+          {stats.map(s => (
+            <div key={s.id} className={`stat-pill ${filter === s.id ? 'accent' : ''}`} 
+              onClick={() => setFilter(filter === s.id ? '' : s.id)}
+              style={{ flexShrink: 0, cursor: 'pointer', padding: '10px 16px' }}>
+              <p className="stat-label">{s.name}</p>
+              <p className="stat-value">{s.count}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="form-group" style={{ marginBottom: 20 }}>
+        <select className="form-input" value={filter} onChange={e => setFilter(e.target.value)}>
+          <option value="">{t('all_employees')}</option>
+          {stats.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="shimmer" style={{ height: 200, borderRadius: 'var(--radius-xl)' }} />
+      ) : (
+        <div className="card-list">
+          {list.map(s => (
+            <div className="data-card" key={s.id}>
+              <div className="data-card-row">
+                <div style={{ flex: 1 }}>
+                  <div className="data-card-name">{s.name}</div>
+                  <div className="data-card-sub">{s.phone} · Ward {s.wardNo}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="badge badge-green" style={{ textTransform: 'capitalize' }}>{s.houseType.replace('_', ' ')}</div>
+                  <div className="data-card-sub" style={{ marginTop: 4 }}>{t('family_members_label')}: {s.familyMembers}</div>
+                </div>
+              </div>
+              <div className="data-card-detail" style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+                <div className="data-card-detail-row">
+                  <span className="data-card-detail-key">Collected By</span>
+                  <span className="data-card-detail-value" style={{ fontWeight: 600, color: 'var(--green)' }}>{s.submittedBy?.name || 'Self'}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─────────────────────────────────────────
    EMPLOYEES
 ───────────────────────────────────────── */
 const Employees = () => {
@@ -1073,6 +1358,8 @@ export default function App() {
               <Route path="/approvals"   element={<Approvals />} />
               <Route path="/members"     element={<Members />} />
               <Route path="/employees"   element={<Employees />} />
+              <Route path="/survey"      element={<SurveyForm />} />
+              <Route path="/survey-results" element={<SurveyDashboard />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/settings"    element={<Settings />} />
               <Route path="/requests"    element={<EditRequests />} />

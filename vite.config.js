@@ -8,7 +8,35 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['app-icon.png'],
+      includeAssets: ['app-icon.png', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/images\.cloudinary\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'admin-cloudinary-images',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 Days
+              },
+            },
+          },
+          {
+            urlPattern: /\/api\/admin\/.*/i,
+            handler: 'NetworkFirst', // Admins need fresh data, but fallback to cache if offline
+            options: {
+              cacheName: 'admin-api-cache',
+              networkTimeoutSeconds: 5,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24, // 24 Hours
+              },
+            },
+          },
+        ],
+      },
       manifest: {
         name: 'PBL Sheba Admin Panel',
         short_name: 'Sheba Admin',
