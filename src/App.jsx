@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate, Navigate } from 'react-router-dom';
 import {
   ChartBarHorizontal, Users, IdentificationCard, ShieldCheck,
   Trash, Gear, Trophy, Plus, X, CheckCircle, XCircle, SignOut,
@@ -55,7 +55,6 @@ const OWNER_MORE = [
   { to: '/requests',   icon: HandHeart,          key: 'edit_requests'},
 ];
 const EMPLOYEE_PRIMARY = [
-  { to: '/',       icon: ChartBarHorizontal, key: 'dashboard' },
   { to: '/survey', icon: ClipboardText,      key: 'collect_data' },
 ];
 const EMPLOYEE_MORE = [
@@ -1354,7 +1353,7 @@ export default function App() {
           <TopBar />
           <main className="page-content">
             <Routes>
-              <Route path="/"            element={<Dashboard />} />
+              <Route path="/"            element={user?.role === 'owner' ? <Dashboard /> : <Navigate to="/survey" replace />} />
               <Route path="/approvals"   element={<Approvals />} />
               <Route path="/members"     element={<Members />} />
               <Route path="/employees"   element={<Employees />} />
