@@ -70,7 +70,7 @@ const ALL_SIDEBAR_NAV = [...OWNER_PRIMARY, ...OWNER_MORE];
 const Sidebar = () => {
   const { t } = useTranslation();
   const { logout, user } = useAuthStore();
-  const navItems = user?.role === 'owner' ? ALL_SIDEBAR_NAV : EMPLOYEE_PRIMARY;
+  const navItems = user?.role === 'owner' ? ALL_SIDEBAR_NAV : [...EMPLOYEE_PRIMARY, ...EMPLOYEE_MORE];
 
   return (
     <aside className="sidebar">
