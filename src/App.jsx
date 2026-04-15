@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import {
   ChartBarHorizontal, Users, IdentificationCard, ShieldCheck,
   Trash, Gear, Trophy, Plus, X, CheckCircle, XCircle, SignOut,
@@ -56,6 +56,7 @@ const OWNER_MORE = [
 ];
 const EMPLOYEE_PRIMARY = [
   { to: '/survey', icon: ClipboardText,      key: 'collect_data' },
+  { to: '/survey-results', icon: ClipboardText, key: 'survey_dashboard' },
 ];
 const EMPLOYEE_MORE = [
   { to: '/members',icon: Users,              key: 'members'   },
@@ -398,15 +399,28 @@ const Members = () => {
   const [list, setList] = useState([]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({ name: '', fatherName: '', nid: '', phone: '', paymentNumber: '', paymentMethod: 'bKash', trxId: '', password: '', image: null });
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState(null);
+  
+  const location = useLocation();
+  const staffId = new URLSearchParams(location.search).get('staffId');
 
   const fetch = () => axiosClient.get('/admin/members').then(r => setList(r.data)).catch(() => {});
   useEffect(() => { fetch(); }, []);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const setEdit = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
+
+  const filteredList = list.filter(m => {
+    if (staffId && m.referredById !== staffId) return false;
+    if (searchTerm) {
+      const str = `${m.name} ${m.nid} ${m.phone} ${m.fatherName} ${m.email}`.toLowerCase();
+      if (!str.includes(searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  });
 
   const openEdit = (m) => {
     setEditForm({ ...m, password: '' });
@@ -418,7 +432,7 @@ const Members = () => {
     try {
       const data = { ...editForm };
       if (!data.password) delete data.password;
-      await axiosClient.patch(`/admin/users/${data._id}`, data);
+      await axiosClient.patch(`/admin/users/${data._id || data.id}`, data);
       setEditOpen(false);
       fetch();
     } catch(err) { alert(err.response?.data?.message || 'Error'); }
@@ -446,22 +460,32 @@ const Members = () => {
 
   return (
     <div className="fade-up">
-      <div className="page-header">
-        <div>
-          <h1>{t('members_title')}</h1>
-          <p className="text-muted">{list.length} {t('members')}</p>
+      <div className="page-header" style={{ alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <h1>{t('members_title')} {staffId && <span className="badge badge-primary">Filtered by Staff</span>}</h1>
+          <p className="text-muted">{filteredList.length} {t('members')}</p>
+          <div style={{ marginTop: 12, position: 'relative', maxWidth: 400 }}>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="Search by Name, NID, Phone, or Father's Name..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => setOpen(true)}>
+        <button className="btn btn-primary btn-sm" onClick={() => setOpen(true)} style={{ marginTop: 8 }}>
           <Plus size={18} weight="bold" /> {t('add_member')}
         </button>
       </div>
 
-      {list.length === 0 ? (
+      {filteredList.length === 0 ? (
         <div className="empty-state"><Users size={48} weight="duotone" /><p>{t('no_members')}</p></div>
       ) : (
         <div className="card-list">
-          {list.map(m => (
-            <div className="data-card" key={m._id}>
+          {filteredList.map(m => (
+            <div className="data-card" key={m._id || m.id}>
               <div className="data-card-row">
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center', flex: 1, minWidth: 0 }}>
                   {m.imageUrl ? (
@@ -482,7 +506,7 @@ const Members = () => {
                   <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(m)} title="Edit">
                     <Pencil size={16} weight="bold" />
                   </button>
-                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(m._id)} title="Delete">
+                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(m._id || m.id)} title="Delete">
                     <Trash size={16} weight="bold" />
                   </button>
                 </div>
@@ -872,10 +896,11 @@ const SurveyForm = () => {
 };
 
 /* ─────────────────────────────────────────
-   SURVEY DASHBOARD (Owner Results)
+   SURVEY DASHBOARD (Owner & Employee Results)
 ───────────────────────────────────────── */
 const SurveyDashboard = () => {
   const { t } = useTranslation();
+  const { user } = useAuthStore();
   const [list, setList] = useState([]);
   const [stats, setStats] = useState([]);
   const [filter, setFilter] = useState('');
@@ -886,8 +911,10 @@ const SurveyDashboard = () => {
     try {
       const { data } = await axiosClient.get(`/surveys?employeeId=${filter}`);
       setList(data);
-      const { data: sData } = await axiosClient.get('/surveys/stats');
-      setStats(sData);
+      if (user.role === 'owner') {
+        const { data: sData } = await axiosClient.get('/surveys/stats');
+        setStats(sData);
+      }
     } catch {
       alert('Error fetching survey data');
     } finally {
@@ -898,28 +925,54 @@ const SurveyDashboard = () => {
   useEffect(() => { fetchData(); }, [filter]);
 
   const exportPDF = () => {
-    const doc = new jsPDF('landscape');
-    doc.text('PBL Sheba - Socio-Economic Survey Report', 14, 15);
+    const doc = new jsPDF('portrait');
+    doc.setFontSize(22);
+    doc.setTextColor(34, 197, 94);
+    doc.text('PBL SHEBA', 105, 20, { align: 'center' });
     
+    doc.setFontSize(14);
+    doc.setTextColor(50, 50, 50);
+    doc.text('Socio-Economic Survey Report', 105, 28, { align: 'center' });
+
+    doc.setFontSize(10);
+    const dateStr = new Date().toLocaleDateString('en-GB');
+    doc.text(`Date of Export: ${dateStr}`, 14, 40);
+    
+    if (user.role === 'employee') {
+       doc.text(`Collected By: ${user.name} (${user.phone})`, 14, 46);
+    } else if (filter) {
+       const emp = stats.find(s => s.id === filter);
+       if (emp) doc.text(`Collected By: ${emp.name}`, 14, 46);
+    }
+
+    doc.text(`Total Records: ${list.length}`, 196, 40, { align: 'right' });
+
     const tableData = list.map((s, index) => [
       index + 1,
-      s.name,
-      s.phone,
-      s.wardNo,
-      s.houseType,
-      s.familyMembers,
-      s.monthlyIncome,
-      s.submittedBy?.name || 'Self'
+      `${s.name}\nPh: ${s.phone}`,
+      `Ward: ${s.wardNo}\n${s.houseType.replace('_', ' ')}\n${s.farmableLand || '0'} decimals`,
+      `Members: ${s.familyMembers}\nBoys: ${s.childrenBoy} Girls: ${s.childrenGirl}\nAnimals: ${s.farmAnimals || '0'}`,
+      s.monthlyIncome ? `${s.monthlyIncome} TK` : '-',
     ]);
 
     doc.autoTable({
-      head: [['SL', 'Name', 'Phone', 'Ward', 'House', 'Family', 'Income', 'Collected By']],
+      head: [['SL', 'Identity', 'Living Condition', 'Family Info', 'Monthly Income']],
       body: tableData,
-      startY: 25,
-      styles: { fontSize: 8 }
+      startY: 55,
+      theme: 'grid',
+      headStyles: { fillColor: [46, 204, 113], textColor: 255 },
+      styles: { fontSize: 9, cellPadding: 4, valign: 'middle' }
     });
 
-    doc.save(`PBL_Sheba_Surveys_${new Date().toLocaleDateString()}.pdf`);
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(`PBL Sheba Official Document - Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, {align: 'center'});
+    }
+
+    doc.save(`PBL_Sheba_Surveys_${dateStr.replace(/\//g,'-')}.pdf`);
   };
 
   const exportExcel = () => {
@@ -949,7 +1002,7 @@ const SurveyDashboard = () => {
     <div className="fade-up">
       <div className="page-header">
         <div>
-          <h1>{t('survey_dashboard')}</h1>
+          <h1>{t('survey_dashboard')} {user.role === 'employee' ? `(My Records)` : ''}</h1>
           <p className="text-muted">{list.length} {t('surveys')}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -962,27 +1015,31 @@ const SurveyDashboard = () => {
         </div>
       </div>
 
-      {/* Stats bar */}
-      <div style={{ marginBottom: 24 }}>
-        <span className="section-eyebrow-sm">{t('survey_stats')}</span>
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, marginTop: 8 }}>
-          {stats.map(s => (
-            <div key={s.id} className={`stat-pill ${filter === s.id ? 'accent' : ''}`} 
-              onClick={() => setFilter(filter === s.id ? '' : s.id)}
-              style={{ flexShrink: 0, cursor: 'pointer', padding: '10px 16px' }}>
-              <p className="stat-label">{s.name}</p>
-              <p className="stat-value">{s.count}</p>
+      {/* Stats bar - ONLY For Owners */}
+      {user.role === 'owner' && (
+        <>
+          <div style={{ marginBottom: 24 }}>
+            <span className="section-eyebrow-sm">{t('survey_stats')}</span>
+            <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, marginTop: 8 }}>
+              {stats.map(s => (
+                <div key={s.id} className={`stat-pill ${filter === s.id ? 'accent' : ''}`} 
+                  onClick={() => setFilter(filter === s.id ? '' : s.id)}
+                  style={{ flexShrink: 0, cursor: 'pointer', padding: '10px 16px' }}>
+                  <p className="stat-label">{s.name}</p>
+                  <p className="stat-value">{s.count}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      <div className="form-group" style={{ marginBottom: 20 }}>
-        <select className="form-input" value={filter} onChange={e => setFilter(e.target.value)}>
-          <option value="">{t('all_employees')}</option>
-          {stats.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
-      </div>
+          <div className="form-group" style={{ marginBottom: 20 }}>
+            <select className="form-input" value={filter} onChange={e => setFilter(e.target.value)}>
+              <option value="">{t('all_employees')}</option>
+              {stats.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+        </>
+      )}
 
       {loading ? (
         <div className="shimmer" style={{ height: 200, borderRadius: 'var(--radius-xl)' }} />
@@ -1022,6 +1079,7 @@ const Employees = () => {
   const [list, setList] = useState([]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '' });
   const { user } = useAuthStore();
 
@@ -1030,12 +1088,46 @@ const Employees = () => {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  const openNew = () => {
+    setEditId(null);
+    setForm({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '' });
+    setOpen(true);
+  };
+
+  const openEdit = (emp) => {
+    setEditId(emp._id || emp.id);
+    setForm({
+      name: emp.name || '',
+      phone: emp.phone || '',
+      password: '',
+      nid: emp.nid || '',
+      email: emp.email || '',
+      fatherName: emp.fatherName || '',
+      address: emp.address || ''
+    });
+    setOpen(true);
+  };
+
+  const toggleStatus = async (emp) => {
+    const newStatus = emp.status === 'disabled' ? 'approved' : 'disabled';
+    if (!confirm(`Are you sure you want to ${newStatus === 'disabled' ? 'disable' : 'enable'} ${emp.name}?`)) return;
+    try {
+      await axiosClient.patch(`/admin/users/${emp._id || emp.id}`, { status: newStatus });
+      fetch();
+    } catch { alert('Error changing status'); }
+  };
+
   const submit = async (e) => {
     e.preventDefault(); setSaving(true);
     try {
-      await axiosClient.post('/admin/employees', form);
+      if (editId) {
+        const payload = { ...form };
+        if (!payload.password) delete payload.password;
+        await axiosClient.patch(`/admin/users/${editId}`, payload);
+      } else {
+        await axiosClient.post('/admin/employees', form);
+      }
       setOpen(false);
-      setForm({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '' });
       fetch();
     } catch(err) { alert(err.response?.data?.message || 'Error'); }
     finally { setSaving(false); }
@@ -1061,7 +1153,7 @@ const Employees = () => {
           <h1>{t('employees_title')}</h1>
           <p className="text-muted">{list.length} {t('employees')}</p>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => setOpen(true)}>
+        <button className="btn btn-primary btn-sm" onClick={openNew}>
           <Plus size={18} weight="bold" /> {t('add_staff')}
         </button>
       </div>
@@ -1071,18 +1163,29 @@ const Employees = () => {
       ) : (
         <div className="card-list">
           {list.map(e => (
-            <div className="data-card" key={e._id}>
+            <div className="data-card" key={e._id || e.id}>
               <div className="data-card-row">
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center', flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', flex: 1, minWidth: 0, opacity: e.status === 'disabled' ? 0.5 : 1 }}>
                   <div className="data-card-avatar">{e.name?.[0]?.toUpperCase()}</div>
                   <div style={{ minWidth: 0 }}>
-                    <div className="data-card-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</div>
+                    <div className="data-card-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {e.name}
+                      {e.status === 'disabled' && <span className="badge badge-red" style={{ marginLeft: 8 }}>Disabled</span>}
+                    </div>
                     <div className="data-card-sub">{e.phone}</div>
                   </div>
                 </div>
-                <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(e._id)}>
-                  <Trash size={16} weight="bold" />
-                </button>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => toggleStatus(e)} title={e.status === 'disabled' ? 'Enable' : 'Disable'}>
+                    {e.status === 'disabled' ? <CheckCircle size={16} weight="bold" /> : <XCircle size={16} weight="bold" />}
+                  </button>
+                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(e)}>
+                    <Pencil size={16} weight="bold" />
+                  </button>
+                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(e._id || e.id)}>
+                    <Trash size={16} weight="bold" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -1091,15 +1194,15 @@ const Employees = () => {
 
       <Modal
         open={open} onClose={() => setOpen(false)}
-        title={t('add_staff')}
+        title={editId ? 'Edit Staff' : t('add_staff')}
         panelIcon={<IdentificationCard size={24} color="white" weight="duotone" />}
-        panelTitle={t('add_staff')}
+        panelTitle={editId ? 'Edit Staff Details' : t('add_staff')}
         panelDesc={t('staff_form_desc')}
         footer={
           <>
             <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setOpen(false)}>{t('cancel')}</button>
             <button className="btn btn-primary" style={{ flex: 2 }} form="emp-form" type="submit" disabled={saving}>
-              {saving ? t('saving') : t('create_employee')}
+              {saving ? t('saving') : (editId ? 'Save Changes' : t('create_employee'))}
             </button>
           </>
         }>
@@ -1135,8 +1238,8 @@ const Employees = () => {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">{t('temp_password')} *</label>
-            <input className="form-input" type="password" value={form.password} onChange={e => set('password', e.target.value)} required />
+            <label className="form-label">{editId ? 'New Password (leave blank to keep current)' : t('temp_password') + ' *'}</label>
+            <input className="form-input" type="password" value={form.password} onChange={e => set('password', e.target.value)} required={!editId} />
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>{t('temp_password_hint')}</span>
           </div>
         </form>
@@ -1151,6 +1254,7 @@ const Employees = () => {
 const Leaderboard = () => {
   const { t } = useTranslation();
   const [board, setBoard] = useState([]);
+  const navigate = useNavigate();
   useEffect(() => { axiosClient.get('/admin/leaderboard').then(r => setBoard(r.data)).catch(() => {}); }, []);
 
   return (
@@ -1166,13 +1270,13 @@ const Leaderboard = () => {
       ) : (
         <div className="card-list">
           {board.map((emp, i) => (
-            <div className="data-card" key={emp._id}>
+            <div className="data-card" key={emp._id || emp.id} onClick={() => navigate(`/members?staffId=${emp._id || emp.id}`)} style={{ cursor: 'pointer', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.01)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
               <div className="data-card-row" style={{ alignItems: 'center' }}>
                 <div style={{ fontSize: i < 3 ? '1.5rem' : '1rem', fontWeight: 800, color: i < 3 ? 'var(--primary)' : 'var(--text-muted)', width: 36, flexShrink: 0, textAlign: 'center' }}>
                   {i < 3 ? ['🥇','🥈','🥉'][i] : `#${i+1}`}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="data-card-name">{emp.name}</div>
+                  <div className="data-card-name" style={{ textDecoration: 'underline', textDecorationColor: 'var(--border)' }}>{emp.name}</div>
                   <div className="data-card-sub">{emp.phone}</div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
