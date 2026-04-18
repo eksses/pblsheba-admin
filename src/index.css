@@ -811,10 +811,10 @@ textarea.form-input {
    MODAL â€” Portal-rendered, three-tier responsive
    Mobile  (<600)  : bottom sheet, slides up, 88dvh
    Tablet  (600-1024): centered dialog 560px, scrolls
-   Desktop (â‰¥1024) : side-by-side 820px, capped height
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   Desktop (≥1024) : side-by-side 820px, capped height
+═══════════════════════════════════════════ */
 
-/* Backdrop â€” always full viewport (portal puts this on body) */
+/* Backdrop — always full viewport (portal puts this on body) */
 .m-backdrop {
   position: fixed;
   inset: 0;
@@ -827,10 +827,12 @@ textarea.form-input {
   justify-content: center;
 }
 
-/* â”€â”€ MOBILE: slide-up sheet â”€â”€ */
+/* ── MOBILE: slide-up sheet ── */
 .m-dialog {
   width: 100%;
-  height: 88dvh;           /* 88% â€” the top 12% shows backdrop */
+  max-height: calc(100svh - 20px);
+  height: auto;
+  margin-top: auto;
   background: var(--surface);
   border-radius: 24px 24px 0 0;
   display: flex;
