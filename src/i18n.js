@@ -14,6 +14,7 @@ const resources = {
       "more": "More",
       "sign_out": "Sign Out",
       "edit_requests": "Edit Requests",
+      "my_profile": "My Profile",
 
       // Dashboard
       "platform_overview": "Platform overview",
@@ -157,6 +158,7 @@ const resources = {
       "more": "আরও",
       "sign_out": "প্রস্থান",
       "edit_requests": "সংশোধন অনুরোধ",
+      "my_profile": "আমার প্রোফাইল",
 
       // Dashboard
       "platform_overview": "প্ল্যাটফর্মের সারসংক্ষেপ",

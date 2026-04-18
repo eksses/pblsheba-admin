@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap');
 
 /* =====================================================
    DESIGN TOKENS â€” Calm, Safe, Humanitarian
@@ -1009,3 +1009,202 @@ textarea.form-input {
 
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* ═══════════════════════════════════════════
+   ID CARD EXPORT
+═══════════════════════════════════════════ */
+.id-card-export {
+  width: 400px;
+  height: auto;
+  background: var(--neutral-0);
+  border: 4px solid var(--green-600);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Outfit', sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+.idc-header {
+  background: linear-gradient(135deg, var(--green-700) 0%, var(--green-600) 100%);
+  color: white;
+  padding: 30px 24px 40px;
+  text-align: center;
+  position: relative;
+}
+.idc-title { font-size: 1.5rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px; }
+.idc-subtitle { font-size: 0.95rem; font-weight: 600; opacity: 0.9; }
+
+.idc-body {
+  padding: 0 24px 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+  background: var(--neutral-0);
+  border-radius: 30px 30px 0 0;
+  margin-top: -30px;
+}
+.idc-avatar {
+  width: 140px; height: 140px; border-radius: 20px;
+  object-fit: cover; border: 4px solid var(--neutral-0);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  margin-top: -70px; margin-bottom: 20px;
+  background: var(--green-50);
+}
+
+.idc-name { font-size: 1.7rem; font-weight: 800; color: var(--neutral-900); text-align: center; margin-bottom: 8px; line-height: 1.2; }
+.idc-status {
+  display: inline-block; background: var(--green-50); color: var(--green-700);
+  padding: 6px 16px; border-radius: 99px; font-weight: 800; font-size: 0.85rem;
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 28px;
+  border: 2px solid var(--border);
+}
+
+.idc-details { width: 100%; border-top: 2px dashed var(--neutral-200); padding-top: 24px; }
+.idc-row { display: flex; justify-content: space-between; margin-bottom: 14px; align-items: center; width: 100%; }
+.idc-label { font-size: 0.9rem; font-weight: 800; color: var(--neutral-500); text-transform: uppercase; }
+.idc-value { font-size: 1.1rem; font-weight: 800; color: var(--neutral-900); text-align: right; }
+
+.idc-footer {
+  background: var(--neutral-50);
+  border-top: 2px solid var(--neutral-100);
+  padding: 20px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--neutral-400);
+}
+.idc-hide {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+}
+
+/* ═══════════════════════════════════════════
+   EMPLOYEE ID CARD EXPORT (PREMIUM DARK)
+═══════════════════════════════════════════ */
+.id-card-employee {
+  width: 400px;
+  height: auto;
+  background: var(--neutral-900);
+  border: 4px solid #1e293b;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Outfit', sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+.idce-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #fbbf24;
+  padding: 30px 24px 40px;
+  text-align: center;
+  position: relative;
+  border-bottom: 2px solid #334155;
+}
+.idce-title { font-size: 1.5rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.idce-subtitle { font-size: 0.95rem; font-weight: 700; color: #cbd5e1; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.idce-body {
+  padding: 0 24px 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+  background: var(--neutral-900);
+  margin-top: -10px;
+}
+.idce-avatar {
+  width: 140px; height: 140px; border-radius: 20px;
+  object-fit: cover; border: 4px solid #334155;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  margin-top: -70px; margin-bottom: 20px;
+  background: #1e293b; color: #fbbf24;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 4rem; font-weight: 900;
+}
+
+.idce-name { font-size: 1.7rem; font-weight: 800; color: #f8fafc; text-align: center; margin-bottom: 8px; line-height: 1.2; }
+.idce-status {
+  display: inline-block; background: rgba(251, 191, 36, 0.1); color: #fbbf24;
+  padding: 6px 18px; border-radius: 99px; font-weight: 800; font-size: 0.85rem;
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 28px;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.idce-details { width: 100%; border-top: 1px solid #334155; padding-top: 24px; }
+.idce-row { display: flex; justify-content: space-between; margin-bottom: 14px; align-items: center; width: 100%; }
+.idce-label { font-size: 0.9rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+.idce-value { font-size: 1.1rem; font-weight: 800; color: #f8fafc; text-align: right; }
+
+.idce-footer {
+  background: #0f172a;
+  border-top: 1px solid #334155;
+  padding: 20px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+/* ═══════════════════════════════════════════
+   PREMIUM PROFILE PAGE
+═══════════════════════════════════════════ */
+.premium-profile-card {
+  background: var(--neutral-0);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid var(--neutral-100);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  max-width: 600px;
+}
+.premium-profile-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+}
+.ppc-header {
+  background: linear-gradient(135deg, var(--green-900) 0%, var(--green-700) 100%);
+  height: 120px;
+  position: relative;
+}
+.ppc-body {
+  padding: 0 32px 32px;
+  position: relative;
+}
+.ppc-avatar {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: var(--neutral-0); border: 4px solid var(--neutral-0);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem; font-weight: 900; color: var(--primary);
+  margin-top: -48px; margin-bottom: 20px;
+}
+.ppc-name { font-size: 1.8rem; font-weight: 900; color: var(--neutral-900); letter-spacing: -0.02em; line-height: 1.2; }
+.ppc-role { color: var(--green-600); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 24px; display: inline-block; padding: 4px 12px; background: var(--green-50); border-radius: 99px; margin-top: 8px;}
+
+.ppc-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+@media (max-width: 500px) { .ppc-info-grid { grid-template-columns: 1fr; } }
+
+.ppc-info-item {
+  background: var(--neutral-50);
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--neutral-100);
+}
+.ppc-info-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+.ppc-info-value { font-size: 1.05rem; color: var(--neutral-900); font-weight: 800; }
+

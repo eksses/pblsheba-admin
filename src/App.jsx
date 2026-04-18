@@ -12,7 +12,9 @@ import axiosClient from './api/axiosClient';
 import { useAuthStore } from './store/useAuthStore';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
+import { Spinner, DownloadSimple } from '@phosphor-icons/react';
 import './i18n';
 
 /* ─────────────────────────────────────────
@@ -53,6 +55,7 @@ const OWNER_MORE = [
   { to: '/leaderboard',icon: Trophy,             key: 'leaderboard' },
   { to: '/settings',   icon: Gear,               key: 'settings'    },
   { to: '/requests',   icon: HandHeart,          key: 'edit_requests'},
+  { to: '/profile',    icon: IdentificationCard, key: 'my_profile'  },
 ];
 const EMPLOYEE_PRIMARY = [
   { to: '/survey', icon: ClipboardText,      key: 'collect_data' },
@@ -60,6 +63,7 @@ const EMPLOYEE_PRIMARY = [
 ];
 const EMPLOYEE_MORE = [
   { to: '/members',icon: Users,              key: 'members'   },
+  { to: '/profile', icon: IdentificationCard, key: 'my_profile' },
 ];
 
 const ALL_SIDEBAR_NAV = [...OWNER_PRIMARY, ...OWNER_MORE];
@@ -905,6 +909,7 @@ const SurveyDashboard = () => {
   const [stats, setStats] = useState([]);
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedSurvey, setSelectedSurvey] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -955,14 +960,36 @@ const SurveyDashboard = () => {
       s.monthlyIncome ? `${s.monthlyIncome} TK` : '-',
     ]);
 
-    doc.autoTable({
-      head: [['SL', 'Identity', 'Living Condition', 'Family Info', 'Monthly Income']],
-      body: tableData,
-      startY: 55,
-      theme: 'grid',
-      headStyles: { fillColor: [46, 204, 113], textColor: 255 },
-      styles: { fontSize: 9, cellPadding: 4, valign: 'middle' }
-    });
+    if (typeof doc.autoTable !== 'function') {
+      if (typeof autoTable === 'function' && autoTable.applyPlugin) {
+        autoTable.applyPlugin(jsPDF);
+      } else if (autoTable && autoTable.applyPlugin) {
+        autoTable.applyPlugin(jsPDF);
+      }
+    }
+
+    if (typeof doc.autoTable === 'function') {
+      doc.autoTable({
+        head: [['SL', 'Identity', 'Living Condition', 'Family Info', 'Monthly Income']],
+        body: tableData,
+        startY: 55,
+        theme: 'grid',
+        headStyles: { fillColor: [46, 204, 113], textColor: 255 },
+        styles: { fontSize: 9, cellPadding: 4, valign: 'middle' }
+      });
+    } else {
+      const runAutoTable = typeof autoTable === 'function' ? autoTable : (autoTable.default || autoTable.autoTable);
+      if (runAutoTable) {
+        runAutoTable(doc, {
+          head: [['SL', 'Identity', 'Living Condition', 'Family Info', 'Monthly Income']],
+          body: tableData,
+          startY: 55,
+          theme: 'grid',
+          headStyles: { fillColor: [46, 204, 113], textColor: 255 },
+          styles: { fontSize: 9, cellPadding: 4, valign: 'middle' }
+        });
+      }
+    }
 
     const pageCount = doc.internal.getNumberOfPages();
     for(let i = 1; i <= pageCount; i++) {
@@ -1046,7 +1073,7 @@ const SurveyDashboard = () => {
       ) : (
         <div className="card-list">
           {list.map(s => (
-            <div className="data-card" key={s.id}>
+            <div className="data-card" key={s.id} onClick={() => setSelectedSurvey(s)} style={{ cursor: 'pointer', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.01)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
               <div className="data-card-row">
                 <div style={{ flex: 1 }}>
                   <div className="data-card-name">{s.name}</div>
@@ -1067,6 +1094,89 @@ const SurveyDashboard = () => {
           ))}
         </div>
       )}
+
+      {selectedSurvey && (
+        <Modal
+          open={!!selectedSurvey} onClose={() => setSelectedSurvey(null)}
+          title="Survey Details"
+          panelIcon={<ClipboardText size={24} color="white" weight="duotone" />}
+          panelTitle="Socio-Economic Data"
+          panelDesc="Full submitted information for this record."
+          footer={
+            <button className="btn btn-outline" style={{ width: '100%' }} onClick={() => setSelectedSurvey(null)}>Close</button>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            
+            <div>
+              <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.05em', marginBottom: '12px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>Personal Identity</h4>
+              <div className="ppc-info-grid" style={{ marginBottom: 0, gap: 12 }}>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Full Name</div>
+                  <div className="ppc-info-value">{selectedSurvey.name}</div>
+                </div>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Father / Husband</div>
+                  <div className="ppc-info-value">{selectedSurvey.fathersName || '—'}</div>
+                </div>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Contact Phone</div>
+                  <div className="ppc-info-value">{selectedSurvey.phone}</div>
+                </div>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Gender</div>
+                  <div className="ppc-info-value" style={{textTransform:'capitalize'}}>{selectedSurvey.gender}</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.05em', marginBottom: '12px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>Housing & Family</h4>
+              <div className="ppc-info-grid" style={{ marginBottom: 0, gap: 12 }}>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Ward No.</div>
+                  <div className="ppc-info-value">{selectedSurvey.wardNo}</div>
+                </div>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">House Type</div>
+                  <div className="ppc-info-value" style={{textTransform:'capitalize'}}>{selectedSurvey.houseType.replace('_', ' ')}</div>
+                </div>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Total Members</div>
+                  <div className="ppc-info-value">{selectedSurvey.familyMembers || '0'}</div>
+                </div>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Children (Boys / Girls)</div>
+                  <div className="ppc-info-value">{selectedSurvey.childrenBoy || '0'} / {selectedSurvey.childrenGirl || '0'}</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.05em', marginBottom: '12px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>Socio-Economics</h4>
+              <div className="ppc-info-grid" style={{ marginBottom: 0, gap: 12 }}>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Monthly Income</div>
+                  <div className="ppc-info-value">{selectedSurvey.monthlyIncome ? `${selectedSurvey.monthlyIncome} TK` : '—'}</div>
+                </div>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Farmable Land</div>
+                  <div className="ppc-info-value">{selectedSurvey.farmableLand ? `${selectedSurvey.farmableLand} decimals` : '—'}</div>
+                </div>
+                <div className="ppc-info-item">
+                  <div className="ppc-info-label">Farm Animals</div>
+                  <div className="ppc-info-value">{selectedSurvey.farmAnimals || 'None'}</div>
+                </div>
+                <div className="ppc-info-item" style={{ background: 'var(--green-50)', borderColor: 'var(--green-200)' }}>
+                  <div className="ppc-info-label" style={{ color: 'var(--green-800)' }}>Data Collected By</div>
+                  <div className="ppc-info-value" style={{ color: 'var(--green-900)' }}>{selectedSurvey.submittedBy?.name || 'Self Registered'}</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
@@ -1081,6 +1191,40 @@ const Employees = () => {
   const [saving, setSaving] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '' });
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [pdfTarget, setPdfTarget] = useState(null);
+  const idCardRef = useRef(null);
+
+  useEffect(() => {
+    if (pdfTarget && idCardRef.current && !generatingPdf) {
+      handleDownloadPdf(pdfTarget);
+    }
+  }, [pdfTarget]);
+
+  const handleDownloadPdf = async (emp) => {
+    setGeneratingPdf(true);
+    try {
+      const canvas = await html2canvas(idCardRef.current, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: null
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: [400, canvas.height * (400 / canvas.width)]
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, 400, canvas.height * (400 / canvas.width));
+      pdf.save(`${emp.name.replace(/ /g, '_')}_Staff_ID_Card.pdf`);
+    } catch (err) {
+      console.error('PDF error', err);
+      alert('Failed to generate PDF.');
+    } finally {
+      setGeneratingPdf(false);
+      setPdfTarget(null);
+    }
+  };
   const { user } = useAuthStore();
 
   const fetch = () => { if (user.role === 'owner') axiosClient.get('/admin/employees').then(r => setList(r.data)).catch(() => {}); };
@@ -1179,6 +1323,9 @@ const Employees = () => {
                   <button className="btn btn-outline btn-icon btn-sm" onClick={() => toggleStatus(e)} title={e.status === 'disabled' ? 'Enable' : 'Disable'}>
                     {e.status === 'disabled' ? <CheckCircle size={16} weight="bold" /> : <XCircle size={16} weight="bold" />}
                   </button>
+                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => setPdfTarget(e)} title="Download Staff PDF" disabled={generatingPdf}>
+                    {generatingPdf && pdfTarget && (pdfTarget._id === e._id || pdfTarget.id === e.id) ? <Spinner size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <DownloadSimple size={16} weight="bold" />}
+                  </button>
                   <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(e)}>
                     <Pencil size={16} weight="bold" />
                   </button>
@@ -1244,6 +1391,48 @@ const Employees = () => {
           </div>
         </form>
       </Modal>
+
+      {pdfTarget && (
+        <div className="idc-hide">
+          <div ref={idCardRef} className="id-card-employee">
+            <div className="idce-header">
+              <div className="idce-title">PBL Sheba Somaj</div>
+              <div className="idce-subtitle">Staff ID Card</div>
+            </div>
+            <div className="idce-body">
+              <div className="idce-avatar">
+                {pdfTarget.name?.[0]?.toUpperCase()}
+              </div>
+              <div className="idce-name">{pdfTarget.name}</div>
+              <div className="idce-status">Official Staff Member</div>
+              
+              <div className="idce-details">
+                <div className="idce-row">
+                  <div className="idce-label">Staff ID</div>
+                  <div className="idce-value">{pdfTarget._id?.slice(-8).toUpperCase() || pdfTarget.id?.slice(-8).toUpperCase() || 'N/A'}</div>
+                </div>
+                <div className="idce-row">
+                  <div className="idce-label">National ID</div>
+                  <div className="idce-value">{pdfTarget.nid || '—'}</div>
+                </div>
+                {pdfTarget.fatherName && (
+                <div className="idce-row">
+                  <div className="idce-label">Father </div>
+                  <div className="idce-value">{pdfTarget.fatherName}</div>
+                </div>
+                )}
+                <div className="idce-row">
+                  <div className="idce-label">Phone</div>
+                  <div className="idce-value">{pdfTarget.phone || '—'}</div>
+                </div>
+              </div>
+            </div>
+            <div className="idce-footer">
+              This is a digitally verified identity card.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1350,6 +1539,127 @@ const Settings = () => {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+};
+
+/* ─────────────────────────────────────────
+   STAFF PROFILE (MY ID)
+───────────────────────────────────────── */
+const StaffProfile = () => {
+  const { user } = useAuthStore();
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const idCardRef = useRef(null);
+
+  if (!user) return null;
+
+  const handleDownloadPdf = async () => {
+    setGeneratingPdf(true);
+    try {
+      const canvas = await html2canvas(idCardRef.current, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: null
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: [400, canvas.height * (400 / canvas.width)]
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, 400, canvas.height * (400 / canvas.width));
+      pdf.save(`${user.name.replace(/ /g, '_')}_Staff_ID_Card.pdf`);
+    } catch (err) {
+      console.error('PDF error', err);
+      alert('Failed to generate PDF.');
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="page-header">
+        <div>
+          <h1>My Profile</h1>
+          <p>View your details and download your official staff ID card.</p>
+        </div>
+      </div>
+      
+      <div className="premium-profile-card">
+        <div className="ppc-header"></div>
+        <div className="ppc-body">
+          <div className="ppc-avatar">
+            {user.name?.[0]?.toUpperCase()}
+          </div>
+          <div className="ppc-name">{user.name}</div>
+          <div className="ppc-role">{user.role === 'owner' ? 'System Administrator' : 'Official Staff Member'}</div>
+
+          <div className="ppc-info-grid">
+            <div className="ppc-info-item">
+              <div className="ppc-info-label">Staff ID</div>
+              <div className="ppc-info-value">{user._id?.slice(-8).toUpperCase() || user.id?.slice(-8).toUpperCase() || 'N/A'}</div>
+            </div>
+            <div className="ppc-info-item">
+              <div className="ppc-info-label">Phone Number</div>
+              <div className="ppc-info-value">{user.phone}</div>
+            </div>
+            <div className="ppc-info-item">
+              <div className="ppc-info-label">National ID</div>
+              <div className="ppc-info-value">{user.nid || '—'}</div>
+            </div>
+            <div className="ppc-info-item">
+              <div className="ppc-info-label">Father's Name</div>
+              <div className="ppc-info-value">{user.fatherName || '—'}</div>
+            </div>
+          </div>
+          
+          <button className="btn btn-primary btn-full" style={{ padding: '14px', fontSize: '1rem' }} onClick={handleDownloadPdf} disabled={generatingPdf}>
+            {generatingPdf ? <Spinner size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <DownloadSimple size={20} />}
+            Download Official ID Card
+          </button>
+        </div>
+      </div>
+
+      <div className="idc-hide">
+        <div ref={idCardRef} className="id-card-employee">
+          <div className="idce-header">
+            <div className="idce-title">PBL Sheba Somaj</div>
+            <div className="idce-subtitle">Staff ID Card</div>
+          </div>
+          <div className="idce-body">
+            <div className="idce-avatar">
+              {user.name?.[0]?.toUpperCase()}
+            </div>
+            <div className="idce-name">{user.name}</div>
+            <div className="idce-status">{user.role === 'owner' ? 'Owner' : 'Official Staff Member'}</div>
+            
+            <div className="idce-details">
+              <div className="idce-row">
+                <div className="idce-label">Staff ID</div>
+                <div className="idce-value">{user._id?.slice(-8).toUpperCase() || user.id?.slice(-8).toUpperCase() || 'N/A'}</div>
+              </div>
+              <div className="idce-row">
+                <div className="idce-label">National ID</div>
+                <div className="idce-value">{user.nid || '—'}</div>
+              </div>
+              {user.fatherName && (
+              <div className="idce-row">
+                <div className="idce-label">Father</div>
+                <div className="idce-value">{user.fatherName}</div>
+              </div>
+              )}
+              <div className="idce-row">
+                <div className="idce-label">Phone</div>
+                <div className="idce-value">{user.phone || '—'}</div>
+              </div>
+            </div>
+          </div>
+          <div className="idce-footer">
+            This is a digitally verified identity card.
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1466,6 +1776,7 @@ export default function App() {
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/settings"    element={<Settings />} />
               <Route path="/requests"    element={<EditRequests />} />
+              <Route path="/profile"     element={<StaffProfile />} />
             </Routes>
           </main>
           <BottomNav />
