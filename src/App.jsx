@@ -309,23 +309,31 @@ const Dashboard = () => {
 const Approvals = () => {
   const { t } = useTranslation();
   const [list, setList] = useState([]);
+  const [actionId, setActionId] = useState(null);
+
   const fetch = () => axiosClient.get('/admin/pending').then(r => setList(r.data)).catch(() => {});
   useEffect(() => { fetch(); }, []);
 
   const approve = async (id) => {
     if (!confirm(t('confirm_approve'))) return;
+    setActionId(`approve-${id}`);
     await axiosClient.patch(`/admin/approve/${id}`, { status: 'approved', paymentVerified: true }).catch(() => alert('Error'));
-    fetch();
+    await fetch();
+    setActionId(null);
   };
   const reject = async (id) => {
     if (!confirm(t('confirm_reject'))) return;
+    setActionId(`reject-${id}`);
     await axiosClient.patch(`/admin/approve/${id}`, { status: 'rejected', paymentVerified: false }).catch(() => alert('Error'));
-    fetch();
+    await fetch();
+    setActionId(null);
   };
   const remove = async (id) => {
     if (!confirm(t('confirm_delete'))) return;
+    setActionId(`delete-${id}`);
     await axiosClient.delete(`/admin/users/${id}`).catch(() => alert('Error'));
-    fetch();
+    await fetch();
+    setActionId(null);
   };
 
   return (
@@ -377,14 +385,14 @@ const Approvals = () => {
               </div>
 
               <div className="data-card-actions">
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => approve(u._id)}>
-                  <CheckCircle size={18} weight="bold" /> {t('approve')}
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => approve(u._id)} disabled={actionId !== null}>
+                  {actionId === `approve-${u._id}` ? <Spinner size={18} style={{animation: 'spin 1s linear infinite'}} /> : <CheckCircle size={18} weight="bold" />} {t('approve')}
                 </button>
-                <button className="btn btn-danger" onClick={() => reject(u._id)} title={t('reject')}>
-                  <XCircle size={18} weight="bold" />
+                <button className="btn btn-danger" onClick={() => reject(u._id)} title={t('reject')} disabled={actionId !== null}>
+                  {actionId === `reject-${u._id}` ? <Spinner size={18} style={{animation: 'spin 1s linear infinite'}} /> : <XCircle size={18} weight="bold" />}
                 </button>
-                <button className="btn btn-ghost btn-icon" style={{ color: 'var(--danger)' }} onClick={() => remove(u._id)} title={t('delete')}>
-                  <Trash size={18} weight="bold" />
+                <button className="btn btn-ghost btn-icon" style={{ color: actionId !== null ? 'var(--text-muted)' : 'var(--danger)' }} onClick={() => remove(u._id)} title={t('delete')} disabled={actionId !== null}>
+                  {actionId === `delete-${u._id}` ? <Spinner size={18} style={{animation: 'spin 1s linear infinite'}} /> : <Trash size={18} weight="bold" />}
                 </button>
               </div>
             </div>
@@ -403,6 +411,7 @@ const Members = () => {
   const [list, setList] = useState([]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [actionId, setActionId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({ name: '', fatherName: '', nid: '', phone: '', paymentNumber: '', paymentMethod: 'bKash', trxId: '', password: '', image: null });
   const [editOpen, setEditOpen] = useState(false);
@@ -438,7 +447,7 @@ const Members = () => {
       if (!data.password) delete data.password;
       await axiosClient.patch(`/admin/users/${data._id || data.id}`, data);
       setEditOpen(false);
-      fetch();
+      await fetch();
     } catch(err) { alert(err.response?.data?.message || 'Error'); }
     finally { setSaving(false); }
   };
@@ -451,15 +460,17 @@ const Members = () => {
       await axiosClient.post('/admin/members', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       setOpen(false);
       setForm({ name: '', fatherName: '', nid: '', phone: '', paymentNumber: '', paymentMethod: 'bKash', trxId: '', password: '', image: null });
-      fetch();
+      await fetch();
     } catch(err) { alert(err.response?.data?.message || 'Error'); }
     finally { setSaving(false); }
   };
 
   const remove = async (id) => {
     if (!confirm(t('delete') + '?')) return;
+    setActionId(`delete-${id}`);
     await axiosClient.delete(`/admin/users/${id}`).catch(() => alert('Error'));
-    fetch();
+    await fetch();
+    setActionId(null);
   };
 
   return (
@@ -507,11 +518,11 @@ const Members = () => {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(m)} title="Edit">
+                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(m)} title="Edit" disabled={actionId !== null}>
                     <Pencil size={16} weight="bold" />
                   </button>
-                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(m._id || m.id)} title="Delete">
-                    <Trash size={16} weight="bold" />
+                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(m._id || m.id)} title="Delete" disabled={actionId !== null}>
+                    {actionId === `delete-${m._id || m.id}` ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : <Trash size={16} weight="bold" />}
                   </button>
                 </div>
               </div>
@@ -1189,6 +1200,7 @@ const Employees = () => {
   const [list, setList] = useState([]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [actionId, setActionId] = useState(null);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '' });
   const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -1255,10 +1267,12 @@ const Employees = () => {
   const toggleStatus = async (emp) => {
     const newStatus = emp.status === 'disabled' ? 'approved' : 'disabled';
     if (!confirm(`Are you sure you want to ${newStatus === 'disabled' ? 'disable' : 'enable'} ${emp.name}?`)) return;
+    setActionId(`toggle-${emp._id || emp.id}`);
     try {
       await axiosClient.patch(`/admin/users/${emp._id || emp.id}`, { status: newStatus });
-      fetch();
+      await fetch();
     } catch { alert('Error changing status'); }
+    setActionId(null);
   };
 
   const submit = async (e) => {
@@ -1272,15 +1286,17 @@ const Employees = () => {
         await axiosClient.post('/admin/employees', form);
       }
       setOpen(false);
-      fetch();
+      await fetch();
     } catch(err) { alert(err.response?.data?.message || 'Error'); }
     finally { setSaving(false); }
   };
 
   const remove = async (id) => {
     if (!confirm(t('delete') + '?')) return;
+    setActionId(`delete-${id}`);
     await axiosClient.delete(`/admin/users/${id}`).catch(() => alert('Error'));
-    fetch();
+    await fetch();
+    setActionId(null);
   };
 
   if (user.role !== 'owner') return (
@@ -1320,17 +1336,17 @@ const Employees = () => {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => toggleStatus(e)} title={e.status === 'disabled' ? 'Enable' : 'Disable'}>
-                    {e.status === 'disabled' ? <CheckCircle size={16} weight="bold" /> : <XCircle size={16} weight="bold" />}
+                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => toggleStatus(e)} title={e.status === 'disabled' ? 'Enable' : 'Disable'} disabled={actionId !== null}>
+                    {actionId === `toggle-${e._id || e.id}` ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : (e.status === 'disabled' ? <CheckCircle size={16} weight="bold" /> : <XCircle size={16} weight="bold" />)}
                   </button>
-                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => setPdfTarget(e)} title="Download Staff PDF" disabled={generatingPdf}>
+                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => setPdfTarget(e)} title="Download Staff PDF" disabled={generatingPdf || actionId !== null}>
                     {generatingPdf && pdfTarget && (pdfTarget._id === e._id || pdfTarget.id === e.id) ? <Spinner size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <DownloadSimple size={16} weight="bold" />}
                   </button>
-                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(e)}>
+                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(e)} disabled={actionId !== null}>
                     <Pencil size={16} weight="bold" />
                   </button>
-                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(e._id || e.id)}>
-                    <Trash size={16} weight="bold" />
+                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(e._id || e.id)} disabled={actionId !== null}>
+                    {actionId === `delete-${e._id || e.id}` ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : <Trash size={16} weight="bold" />}
                   </button>
                 </div>
               </div>
@@ -1487,10 +1503,17 @@ const Leaderboard = () => {
 const Settings = () => {
   const { t } = useTranslation();
   const [s, setS] = useState({ registrationFee: 365, employeeCanViewAll: false, paymentMethods: [] });
+  const [saving, setSaving] = useState(false);
   const { user } = useAuthStore();
   useEffect(() => { axiosClient.get('/admin/settings').then(r => setS(r.data)).catch(() => {}); }, []);
 
-  const save = async () => { try { await axiosClient.patch('/admin/settings', s); alert('Saved!'); } catch { alert('Error saving'); } };
+  const save = async () => { 
+    setSaving(true);
+    try { 
+      await axiosClient.patch('/admin/settings', s); 
+    } catch { alert('Error saving'); } 
+    finally { setSaving(false); }
+  };
   const updatePM = (i, k, v) => { const pms = [...s.paymentMethods]; pms[i][k] = v; setS({ ...s, paymentMethods: pms }); };
   const togglePM = (i) => updatePM(i, 'isActive', !s.paymentMethods[i].isActive);
 
@@ -1505,7 +1528,9 @@ const Settings = () => {
     <div className="fade-up">
       <div className="page-header">
         <h1>{t('settings_title')}</h1>
-        <button className="btn btn-primary btn-sm" onClick={save}>{t('save_all')}</button>
+        <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
+          {saving ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : t('save_all')}
+        </button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div className="data-card">
