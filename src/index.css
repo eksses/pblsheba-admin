@@ -1,10 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+@import url('https:
 
-/* =====================================================
-   DESIGN TOKENS — Calm, Safe, Humanitarian
-===================================================== */
+
 :root {
-  /* Brand Greens */
+  
   --green-50:  #f0fdf4;
   --green-100: #dcfce7;
   --green-200: #bbf7d0;
@@ -15,7 +13,7 @@
   --green-800: #166534;
   --green-900: #14532d;
 
-  /* Neutral Scale */
+  
   --neutral-0:   #ffffff;
   --neutral-50:  #f9fafb;
   --neutral-100: #f3f4f6;
@@ -27,7 +25,7 @@
   --neutral-700: #374151;
   --neutral-900: #111827;
 
-  /* Semantic aliases */
+  
   --primary:         var(--green-600);
   --primary-hover:   var(--green-700);
   --primary-light:   var(--green-50);
@@ -41,17 +39,17 @@
   --text-muted:      var(--neutral-500);
   --text-subtle:     var(--neutral-400);
 
-  /* Danger */
+  
   --danger:      #dc2626;
   --danger-bg:   #fef2f2;
   --warning-bg:  #fffbeb;
   --warning-text:#92400e;
 
-  /* Fonts */
+  
   --font: 'Outfit', sans-serif;
   --font-bn: 'Hind Siliguri', sans-serif;
 
-  /* Layout */
+  
   --sidebar-w: 264px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -63,9 +61,7 @@
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
 }
 
-/* =====================================================
-   RESET
-===================================================== */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
@@ -98,9 +94,7 @@ h1, h2, h3, h4 {
   letter-spacing: -0.015em; 
 }
 
-/* =====================================================
-   LAYOUT
-===================================================== */
+
 .admin-root {
   display: flex;
   min-height: 100dvh;
@@ -126,9 +120,7 @@ h1, h2, h3, h4 {
   overflow-x: hidden;
 }
 
-/* =====================================================
-   SIDEBAR — Desktop Only
-===================================================== */
+
 .sidebar {
   display: none;
 }
@@ -225,9 +217,7 @@ h1, h2, h3, h4 {
   border-top: 1px solid var(--border);
 }
 
-/* =====================================================
-   BOTTOM NAV — Mobile Only
-===================================================== */
+
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -275,9 +265,7 @@ h1, h2, h3, h4 {
 .bnav-item.active { color: var(--primary); }
 .bnav-item svg { flex-shrink: 0; }
 
-/* =====================================================
-   TOP BAR — Mobile Only
-===================================================== */
+
 .top-bar {
   display: flex;
   align-items: center;
@@ -313,9 +301,7 @@ h1, h2, h3, h4 {
   justify-content: center;
 }
 
-/* =====================================================
-   PAGE HEADERS
-===================================================== */
+
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -336,9 +322,7 @@ h1, h2, h3, h4 {
   margin-top: 4px;
 }
 
-/* =====================================================
-   METRICS GRID
-===================================================== */
+
 .metrics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -392,9 +376,7 @@ h1, h2, h3, h4 {
   line-height: 1;
 }
 
-/* =====================================================
-   DATA CARDS
-===================================================== */
+
 .card-list {
   display: flex;
   flex-direction: column;
@@ -462,9 +444,7 @@ h1, h2, h3, h4 {
   flex-wrap: wrap;
 }
 
-/* =====================================================
-   BUTTONS
-===================================================== */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -517,9 +497,7 @@ h1, h2, h3, h4 {
 .btn-icon { padding: 0; width: 44px; border-radius: var(--radius-md); flex-shrink: 0; }
 .btn-icon.btn-sm { width: 36px; }
 
-/* =====================================================
-   FORM ELEMENTS
-===================================================== */
+
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-row { display: grid; grid-template-columns: 1fr; gap: 16px; }
 @media (min-width: 480px) { .form-row-2 { grid-template-columns: 1fr 1fr; } }
@@ -558,9 +536,7 @@ textarea.form-input {
   resize: vertical;
 }
 
-/* =====================================================
-   BADGES
-===================================================== */
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -577,11 +553,9 @@ textarea.form-input {
 .badge-approved { background: var(--green-100);  color: var(--green-800);  }
 .badge-rejected { background: #fce7f3; color: #9d174d; }
 
-/* =====================================================
-   MODALS — Portal-rendered, three-tier responsive
-===================================================== */
 
-/* Backdrop — always full viewport */
+
+
 .m-backdrop {
   position: fixed;
   inset: 0;
@@ -590,11 +564,11 @@ textarea.form-input {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
-  align-items: flex-end;   /* mobile: anchor to bottom */
+  align-items: flex-end;   
   justify-content: center;
 }
 
-/* ── MOBILE: slide-up sheet ── */
+
 .m-dialog {
   width: 100%;
   max-height: 92dvh;
@@ -615,7 +589,7 @@ textarea.form-input {
   to   { transform: translateY(0);    }
 }
 
-/* Drag pill */
+
 .m-handle {
   width: 44px;
   height: 5px;
@@ -625,7 +599,7 @@ textarea.form-input {
   flex-shrink: 0;
 }
 
-/* Header */
+
 .m-header {
   display: flex;
   align-items: center;
@@ -642,7 +616,7 @@ textarea.form-input {
   letter-spacing: -0.02em;
 }
 
-/* Body — the ONLY scroll zone */
+
 .m-body {
   flex: 1;
   min-height: 0;
@@ -655,7 +629,7 @@ textarea.form-input {
   gap: 14px;
 }
 
-/* Footer */
+
 .m-footer {
   flex-shrink: 0;
   padding: 14px 20px;
@@ -665,7 +639,7 @@ textarea.form-input {
   background: var(--surface);
 }
 
-/* Right column */
+
 .m-right {
   display: flex;
   flex-direction: column;
@@ -675,10 +649,10 @@ textarea.form-input {
   overflow: hidden;
 }
 
-/* Left info panel — hidden on mobile */
+
 .m-panel { display: none; }
 
-/* TABLET ≥600px */
+
 @media (min-width: 600px) {
   .m-backdrop {
     align-items: center;
@@ -704,7 +678,7 @@ textarea.form-input {
   to   { opacity: 1; transform: scale(1)    translateY(0);    }
 }
 
-/* DESKTOP ≥1024px */
+
 @media (min-width: 1024px) {
   .m-dialog {
     max-width: 820px;
@@ -734,7 +708,7 @@ textarea.form-input {
   .m-footer { padding: 16px 28px; border-radius: 0 0 20px 0; }
 }
 
-/* Form grid */
+
 .m-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -747,9 +721,7 @@ textarea.form-input {
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 
-/* =====================================================
-   ID CARD EXPORT
-===================================================== */
+
 .id-card-export {
   width: 400px;
   height: auto;
@@ -821,7 +793,7 @@ textarea.form-input {
   left: -9999px;
 }
 
-/* EMPLOYEE ID CARD EXPORT (PREMIUM DARK) */
+
 .id-card-employee {
   width: 400px;
   height: auto;
@@ -890,7 +862,7 @@ textarea.form-input {
   color: #64748b;
 }
 
-/* PREMIUM PROFILE PAGE */
+
 .premium-profile-card {
   background: var(--neutral-0);
   border-radius: var(--radius-2xl);
@@ -941,14 +913,12 @@ textarea.form-input {
 .ppc-info-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
 .ppc-info-value { font-size: 1.05rem; color: var(--neutral-900); font-weight: 800; }
 
-/* Custom scrollbars */
+
 .m-body::-webkit-scrollbar { width: 6px; }
 .m-body::-webkit-scrollbar-track { background: transparent; }
 .m-body::-webkit-scrollbar-thumb { background: var(--neutral-300); border-radius: 3px; }
 
-/* =====================================================
-   LANGUAGE TOGGLE
-===================================================== */
+
 .lang-toggle {
   display: flex;
   align-items: center;
@@ -983,9 +953,7 @@ textarea.form-input {
   box-shadow: var(--shadow-sm);
 }
 
-/* =====================================================
-   LOGIN PAGE
-==================================================== */
+
 .login-page {
   min-height: 100dvh;
   display: flex;
@@ -1042,9 +1010,7 @@ textarea.form-input {
   animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
-/* =====================================================
-   ANIMATIONS
-===================================================== */
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0);    }

@@ -18,9 +18,7 @@ import { Spinner, DownloadSimple } from '@phosphor-icons/react';
 import ImageCapture from './components/ImageCapture';
 import './i18n';
 
-/* ─────────────────────────────────────────
-   Language Toggle (persists choice)
-───────────────────────────────────────── */
+
 const LangToggle = () => {
   const { i18n } = useTranslation();
   const toggle = (l) => {
@@ -40,11 +38,9 @@ const LangToggle = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   NAV CONFIG
-───────────────────────────────────────── */
-// Owner sees all 6. Employee sees only Dashboard + Members.
-// We split: 2 primary items + everything else in "More" drawer.
+
+
+
 const OWNER_PRIMARY = [
   { to: '/',          icon: ChartBarHorizontal, key: 'dashboard'  },
   { to: '/approvals', icon: ShieldCheck,         key: 'approvals'  },
@@ -70,9 +66,7 @@ const EMPLOYEE_MORE = [
 
 const ALL_SIDEBAR_NAV = [...OWNER_PRIMARY, ...OWNER_MORE];
 
-/* ─────────────────────────────────────────
-   SIDEBAR (Desktop ≥768px)
-───────────────────────────────────────── */
+
 const Sidebar = () => {
   const { t } = useTranslation();
   const { logout, user } = useAuthStore();
@@ -106,9 +100,7 @@ const Sidebar = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   TOP BAR (Mobile <768px)
-───────────────────────────────────────── */
+
 const TopBar = () => {
   const { t } = useTranslation();
   const { logout } = useAuthStore();
@@ -128,11 +120,7 @@ const TopBar = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   BOTTOM NAV — exactly 3 grid cells
-   [Dashboard] [Approvals/Members] [More •••]
-   'More' opens a tray above the bar.
-───────────────────────────────────────── */
+
 const BottomNav = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
@@ -143,7 +131,7 @@ const BottomNav = () => {
   const primaryItems = isOwner ? OWNER_PRIMARY : EMPLOYEE_PRIMARY;
   const moreItems    = isOwner ? OWNER_MORE    : EMPLOYEE_MORE;
 
-  // Close drawer on outside tap
+  
   useEffect(() => {
     if (!moreOpen) return;
     const h = (e) => { if (drawerRef.current && !drawerRef.current.contains(e.target)) setMoreOpen(false); };
@@ -153,15 +141,15 @@ const BottomNav = () => {
 
   return (
     <>
-      {/* More Drawer — rises above the nav bar */}
+      {}
       {moreOpen && (
         <>
-          {/* Backdrop */}
+          {}
           <div
             onClick={() => setMoreOpen(false)}
             style={{ position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(0,0,0,0.25)' }}
           />
-          {/* The tray */}
+          {}
           <div
             ref={drawerRef}
             style={{
@@ -193,7 +181,7 @@ const BottomNav = () => {
         </>
       )}
 
-      {/* The bar itself — always exactly 3 grid columns */}
+      {}
       <nav className="bottom-nav">
         {primaryItems.map(({ to, icon: Icon, key }) => (
           <NavLink
@@ -204,7 +192,7 @@ const BottomNav = () => {
             <span>{t(key)}</span>
           </NavLink>
         ))}
-        {/* More button always occupies the 3rd cell */}
+        {}
         <button
           className={`bnav-item ${moreOpen ? 'active' : ''}`}
           onClick={() => setMoreOpen(v => !v)}
@@ -217,11 +205,7 @@ const BottomNav = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   MODAL — renders via Portal directly into document.body
-   so it ALWAYS covers the full viewport, regardless of
-   any overflow:hidden parent (like .admin-main).
-───────────────────────────────────────── */
+
 const Modal = ({ open, onClose, title, panelIcon, panelTitle, panelDesc, children, footer }) => {
   if (!open) return null;
 
@@ -229,14 +213,14 @@ const Modal = ({ open, onClose, title, panelIcon, panelTitle, panelDesc, childre
     <div className="m-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="m-dialog">
 
-        {/* Left info panel — CSS hides this below 900px */}
+        {}
         <div className="m-panel">
           {panelIcon  && <div className="m-panel-icon">{panelIcon}</div>}
           {panelTitle && <h3>{panelTitle}</h3>}
           {panelDesc  && <p>{panelDesc}</p>}
         </div>
 
-        {/* Right column — always a real flex column */}
+        {}
         <div className="m-right">
           <div className="m-handle" />
 
@@ -256,13 +240,11 @@ const Modal = ({ open, onClose, title, panelIcon, panelTitle, panelDesc, childre
     </div>
   );
 
-  // Portal to body — escapes overflow:hidden on any parent
+  
   return createPortal(content, document.body);
 };
 
-/* ─────────────────────────────────────────
-   DASHBOARD
-───────────────────────────────────────── */
+
 const Dashboard = () => {
   const { t } = useTranslation();
   const { dashboardCache, setDashboardCache } = useAuthStore();
@@ -312,9 +294,7 @@ const Dashboard = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   APPROVALS
-───────────────────────────────────────── */
+
 const Approvals = () => {
   const { t } = useTranslation();
   const [list, setList] = useState([]);
@@ -412,9 +392,7 @@ const Approvals = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   MEMBERS
-───────────────────────────────────────── */
+
 const Members = () => {
   const { t } = useTranslation();
   const [list, setList] = useState([]);
@@ -597,7 +575,7 @@ const Members = () => {
         </form>
       </Modal>
 
-      {/* Edit Member Modal */}
+      {}
       {editForm && (
         <Modal
           open={editOpen}
@@ -653,9 +631,7 @@ const Members = () => {
 
 
 
-/* ─────────────────────────────────────────
-   EDIT REQUESTS
-───────────────────────────────────────── */
+
 const EditRequests = () => {
   const { t } = useTranslation();
   const [list, setList] = useState([]);
@@ -730,7 +706,7 @@ const EditRequests = () => {
         </div>
       )}
 
-      {/* Edit Member Modal */}
+      {}
       {editForm && (
         <Modal
           open={editOpen}
@@ -784,9 +760,7 @@ const EditRequests = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   SURVEY FORM (House-to-House)
-───────────────────────────────────────── */
+
 const SurveyForm = () => {
   const { t } = useTranslation();
   const [form, setForm] = useState({
@@ -919,9 +893,7 @@ const SurveyForm = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   SURVEY DASHBOARD (Owner & Employee Results)
-───────────────────────────────────────── */
+
 const SurveyDashboard = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
@@ -1018,8 +990,8 @@ const SurveyDashboard = () => {
       doc.setTextColor(150);
       doc.text(`PBL Sheba Official Document - Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, {align: 'center'});
     }
-
-    doc.save(`PBL_Sheba_Surveys_${dateStr.replace(/\//g,'-')}.pdf`);
+    const fileName = 'PBL_Sheba_Surveys_' + dateStr.replace(/\//g, '-') + '.pdf';
+    doc.save(fileName);
   };
 
   const exportExcel = () => {
@@ -1042,7 +1014,8 @@ const SurveyDashboard = () => {
     })));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Surveys");
-    XLSX.writeFile(wb, `PBL_Sheba_Surveys_${new Date().toLocaleDateString()}.xlsx`);
+    const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
+    XLSX.writeFile(wb, 'PBL_Sheba_Surveys_' + dateStr + '.xlsx');
   };
 
   return (
@@ -1062,7 +1035,7 @@ const SurveyDashboard = () => {
         </div>
       </div>
 
-      {/* Stats bar - ONLY For Owners */}
+      {}
       {user.role === 'owner' && (
         <>
           <div style={{ marginBottom: 24 }}>
@@ -1201,9 +1174,7 @@ const SurveyDashboard = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   EMPLOYEES
-───────────────────────────────────────── */
+
 const Employees = () => {
   const { t } = useTranslation();
   const [list, setList] = useState([]);
@@ -1476,9 +1447,7 @@ const Employees = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   LEADERBOARD
-───────────────────────────────────────── */
+
 const Leaderboard = () => {
   const { t } = useTranslation();
   const [board, setBoard] = useState([]);
@@ -1520,12 +1489,18 @@ const Leaderboard = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   SETTINGS
-───────────────────────────────────────── */
+
+
 /* ─────────────────────────────────────────
    JOB APPLICATIONS
 ───────────────────────────────────────── */
+const DetailRow = ({ label, value }) => (
+  <div style={{ marginBottom: 12 }}>
+    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+    <div style={{ fontSize: '0.95rem', color: 'var(--text-body)', fontWeight: 500 }}>{value || '—'}</div>
+  </div>
+);
+
 const JobApplications = () => {
   const { t } = useTranslation();
   const [list, setList] = useState([]);
@@ -1547,13 +1522,6 @@ const JobApplications = () => {
     } catch { alert('Error updating status'); }
     setActionId(null);
   };
-
-  const DetailRow = ({ label, value }) => (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-      <div style={{ fontSize: '0.95rem', color: 'var(--text-body)', fontWeight: 500 }}>{value || '—'}</div>
-    </div>
-  );
 
   return (
     <div className="fade-up">
@@ -1744,7 +1712,7 @@ const Settings = () => {
         </div>
 
         {s.paymentMethods?.map((pm, i) => (
-          <div className="data-card" key={i} style={{ borderLeft: `4px solid ${pm.isActive ? (pm.themeColor || 'var(--primary)') : 'var(--border)'}`, opacity: pm.isActive ? 1 : 0.65 }}>
+          <div className="data-card" key={i} style={{ borderLeft: '4px solid ' + (pm.isActive ? (pm.themeColor || 'var(--primary)') : 'var(--border)'), opacity: pm.isActive ? 1 : 0.65 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h3 style={{ color: pm.themeColor || 'var(--primary)' }}>{pm.name}</h3>
               <button className={`btn btn-sm ${pm.isActive ? 'btn-outline' : 'btn-primary'}`} onClick={() => togglePM(i)}>
@@ -1766,9 +1734,7 @@ const Settings = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   STAFF PROFILE (MY ID)
-───────────────────────────────────────── */
+
 const StaffProfile = () => {
   const { user, token, login } = useAuthStore();
   const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -1926,9 +1892,7 @@ const StaffProfile = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   LOGIN
-───────────────────────────────────────── */
+
 const Login = () => {
   const { t } = useTranslation();
   const [phone, setPhone] = useState('');
@@ -1981,9 +1945,7 @@ const Login = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   FORCE PASSWORD RESET
-───────────────────────────────────────── */
+
 const ForceReset = () => {
   const { t } = useTranslation();
   const [pw, setPw] = useState('');
@@ -2012,9 +1974,7 @@ const ForceReset = () => {
   );
 };
 
-/* ─────────────────────────────────────────
-   APP ROOT
-───────────────────────────────────────── */
+
 export default function App() {
   const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated) return <Login />;
