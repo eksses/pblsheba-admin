@@ -121,17 +121,33 @@ const ImageCapture = ({ onImageChange, currentImage }) => {
           display: flex;
           align-items: center;
           justify-content: center;
-          height: 200px;
+          gap: 24px;
+          padding: 20px 0;
+          height: 100%;
+          min-height: 180px;
         }
         .capture-option-btn {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 8px;
+          justify-content: center;
+          gap: 12px;
+          padding: 0;
+          width: 130px;
+          height: 130px;
+          border: 2px dashed var(--border);
+          border-radius: var(--radius-2xl);
           cursor: pointer;
+          color: var(--neutral-400);
+          background: var(--neutral-800);
+          transition: all 0.2s ease;
+        }
+        .capture-option-btn:hover {
+          border-color: var(--primary);
           color: var(--primary);
-          background: none;
-          border: none;
+          background: rgba(34, 197, 94, 0.1);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 16px rgba(34, 197, 94, 0.15);
         }
         .image-preview-container {
           position: relative;

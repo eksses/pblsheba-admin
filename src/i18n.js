@@ -4,7 +4,7 @@ import { initReactI18next } from 'react-i18next';
 const resources = {
   en: {
     translation: {
-      
+
       "dashboard": "Dashboard",
       "approvals": "Approvals",
       "members": "Members",
@@ -16,7 +16,7 @@ const resources = {
       "edit_requests": "Edit Requests",
       "my_profile": "My Profile",
 
-      
+
       "platform_overview": "Platform overview",
       "helping_message": "Every approval connects a family to essential food, goods and support. Review with care.",
       "helping_title": "Helping those who need it most",
@@ -24,8 +24,11 @@ const resources = {
       "pending_approvals": "Pending",
       "total_members": "Members",
       "total_employees": "Staff",
+      "job_applicants": "Job Applicants",
+      "job_applicants_count": "{{count}} job applicant",
+      "job_applicants_count_plural": "{{count}} job applicants",
 
-      
+
       "action_required": "Pending Approvals",
       "all_caught_up": "All caught up! No pending applications.",
       "approve": "Approve",
@@ -37,7 +40,7 @@ const resources = {
       "applications_count": "{{count}} application awaiting review",
       "applications_count_plural": "{{count}} applications awaiting review",
 
-      
+
       "members_title": "Members",
       "add_member": "Add Member",
       "no_members": "No members yet.",
@@ -53,7 +56,7 @@ const resources = {
       "saving": "Saving…",
       "as_per_nid": "As per NID",
 
-      
+
       "employees_title": "Staff Members",
       "add_staff": "Add Staff",
       "no_staff": "No staff yet.",
@@ -66,13 +69,13 @@ const resources = {
       "staff_count": "{{count}} employee",
       "staff_count_plural": "{{count}} employees",
 
-      
+
       "rankings_title": "Rankings",
       "rankings_desc": "Top performing staff by member recruitment",
       "no_data": "No data yet.",
       "members_label": "MEMBERS",
 
-      
+
       "settings_title": "Settings",
       "save_all": "Save All",
       "general": "General",
@@ -85,7 +88,7 @@ const resources = {
       "account_number": "Account Number",
       "instructions": "Instructions",
 
-      
+
       "sign_in": "Sign In",
       "admin_subtitle": "Admin portal for community care management",
       "use_credentials": "Use your operator credentials",
@@ -94,13 +97,13 @@ const resources = {
       "access_denied": "Access denied for this account.",
       "login_failed": "Login failed. Check credentials.",
 
-      
+
       "security_check": "Security Check",
       "set_password_msg": "Set a new password before you continue",
       "new_password": "New Password",
       "set_password": "Set Password",
 
-      
+
       "brand_name": "PBL Sheba",
       "brand_tagline": "Community Care Platform",
       "member_form_desc": "Fill in the member's personal details and payment information to register them.",
@@ -110,7 +113,7 @@ const resources = {
       "confirm_reject": "Are you sure you want to reject?",
       "confirm_delete": "Are you sure you want to delete?",
 
-      
+
       "survey": "Survey",
       "surveys": "Surveys",
       "collect_data": "Collect Data",
@@ -148,7 +151,7 @@ const resources = {
   },
   bn: {
     translation: {
-      
+
       "dashboard": "ড্যাশবোর্ড",
       "approvals": "অনুমোদন",
       "members": "সদস্য",
@@ -159,8 +162,11 @@ const resources = {
       "sign_out": "প্রস্থান",
       "edit_requests": "সংশোধন অনুরোধ",
       "my_profile": "আমার প্রোফাইল",
+      "job_applicants": "চাকরির আবেদন",
+      "job_applicants_count": "{{count}} চাকরির আবেদন",
+      "job_applicants_count_plural": "{{count}} চাকরির আবেদন",
 
-      
+
       "platform_overview": "প্ল্যাটফর্মের সারসংক্ষেপ",
       "helping_message": "প্রতিটি অনুমোদন একটি পরিবারকে প্রয়োজনীয় খাদ্য ও সহায়তার সাথে যুক্ত করে। যত্নসহকারে পর্যালোচনা করুন।",
       "helping_title": "যাদের সবচেয়ে বেশি প্রয়োজন তাদের সাহায্য করছি",
@@ -169,7 +175,7 @@ const resources = {
       "total_members": "সদস্য",
       "total_employees": "কর্মী",
 
-      
+
       "action_required": "অপেক্ষমাণ অনুমোদন",
       "all_caught_up": "সব ঠিক আছে! কোনো অপেক্ষমাণ আবেদন নেই।",
       "approve": "অনুমোদন করুন",
@@ -181,7 +187,7 @@ const resources = {
       "applications_count": "{{count}}টি আবেদন পর্যালোচনার অপেক্ষায়",
       "applications_count_plural": "{{count}}টি আবেদন পর্যালোচনার অপেক্ষায়",
 
-      
+
       "members_title": "সদস্যগণ",
       "add_member": "সদস্য যোগ করুন",
       "no_members": "এখনও কোনো সদস্য নেই।",
@@ -197,7 +203,7 @@ const resources = {
       "saving": "সংরক্ষণ হচ্ছে…",
       "as_per_nid": "এনআইডি অনুযায়ী",
 
-      
+
       "employees_title": "কর্মীগণ",
       "add_staff": "কর্মী যোগ করুন",
       "no_staff": "এখনও কোনো কর্মী নেই।",
@@ -210,13 +216,13 @@ const resources = {
       "staff_count": "{{count}} জন কর্মী",
       "staff_count_plural": "{{count}} জন কর্মী",
 
-      
+
       "rankings_title": "র‍্যাংকিং",
       "rankings_desc": "সদস্য নিয়োগে সেরা কর্মীরা",
       "no_data": "এখনও কোনো তথ্য নেই।",
       "members_label": "সদস্য",
 
-      
+
       "settings_title": "সেটিংস",
       "save_all": "সব সংরক্ষণ করুন",
       "general": "সাধারণ",
@@ -229,7 +235,7 @@ const resources = {
       "account_number": "অ্যাকাউন্ট নম্বর",
       "instructions": "নির্দেশনা",
 
-      
+
       "sign_in": "প্রবেশ করুন",
       "admin_subtitle": "কমিউনিটি কেয়ার ব্যবস্থাপনার অ্যাডমিন পোর্টাল",
       "use_credentials": "আপনার অপারেটর তথ্য ব্যবহার করুন",
@@ -238,13 +244,13 @@ const resources = {
       "access_denied": "এই অ্যাকাউন্টের জন্য প্রবেশাধিকার নেই।",
       "login_failed": "লগইন ব্যর্থ হয়েছে। তথ্য পরীক্ষা করুন।",
 
-      
+
       "security_check": "নিরাপত্তা যাচাই",
       "set_password_msg": "চালিয়ে যাওয়ার আগে নতুন পাসওয়ার্ড সেট করুন",
       "new_password": "নতুন পাসওয়ার্ড",
       "set_password": "পাসওয়ার্ড সেট করুন",
 
-      
+
       "brand_name": "পিবিএল সেবা",
       "brand_tagline": "কমিউনিটি কেয়ার প্ল্যাটফর্ম",
       "member_form_desc": "সদস্যের ব্যক্তিগত তথ্য এবং পেমেন্ট বিবরণ পূরণ করে নিবন্ধন সম্পন্ন করুন।",
@@ -254,7 +260,7 @@ const resources = {
       "confirm_reject": "আপনি কি নিশ্চিত যে আপনি এটি প্রত্যাখ্যান করতে চান?",
       "confirm_delete": "আপনি কি নিশ্চিত যে আপনি এটি মুছতে চান?",
 
-      
+
       "survey": "জরিপ",
       "surveys": "জরিপসমূহ",
       "collect_data": "তথ্য সংগ্রহ",
@@ -296,7 +302,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: localStorage.getItem('pbl_lang') || 'en', 
+    lng: localStorage.getItem('pbl_lang') || 'en',
     fallbackLng: 'en',
     interpolation: { escapeValue: false }
   });
