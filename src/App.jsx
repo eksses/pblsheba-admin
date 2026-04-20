@@ -5,7 +5,7 @@ import {
   ChartBarHorizontal, Users, IdentificationCard, ShieldCheck,
   Trash, Gear, Trophy, Plus, X, CheckCircle, XCircle, SignOut,
   Leaf, HandHeart, Money, WarningCircle, DotsThree, Pencil,
-  House, ClipboardText, FileArrowDown
+  House, ClipboardText, FileArrowDown, Briefcase
 } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import axiosClient from './api/axiosClient';
@@ -54,6 +54,7 @@ const OWNER_MORE = [
   { to: '/employees',  icon: IdentificationCard, key: 'employees'   },
   { to: '/survey-results', icon: ClipboardText,   key: 'survey_dashboard' },
   { to: '/leaderboard',icon: Trophy,             key: 'leaderboard' },
+  { to: '/career',     icon: Briefcase,          key: 'job_applications' },
   { to: '/settings',   icon: Gear,               key: 'settings'    },
   { to: '/requests',   icon: HandHeart,          key: 'edit_requests'},
   { to: '/profile',    icon: IdentificationCard, key: 'my_profile'  },
@@ -1522,6 +1523,176 @@ const Leaderboard = () => {
 /* ─────────────────────────────────────────
    SETTINGS
 ───────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   JOB APPLICATIONS
+───────────────────────────────────────── */
+const JobApplications = () => {
+  const { t } = useTranslation();
+  const [list, setList] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [actionId, setActionId] = useState(null);
+  const [note, setNote] = useState('');
+
+  const fetch = () => axiosClient.get('/admin/career/applications').then(r => setList(r.data)).catch(() => {});
+  useEffect(() => { fetch(); }, []);
+
+  const updateStatus = async (id, status) => {
+    if (!confirm(`Are you sure you want to ${status} this application?`)) return;
+    setActionId(`${status}-${id}`);
+    try {
+      await axiosClient.patch(`/admin/career/applications/${id}`, { status, statusNote: note });
+      setSelected(null);
+      setNote('');
+      await fetch();
+    } catch { alert('Error updating status'); }
+    setActionId(null);
+  };
+
+  const DetailRow = ({ label, value }) => (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+      <div style={{ fontSize: '0.95rem', color: 'var(--text-body)', fontWeight: 500 }}>{value || '—'}</div>
+    </div>
+  );
+
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div>
+          <h1>Job Applications</h1>
+          <p className="text-muted">{list.length} submissions received</p>
+        </div>
+      </div>
+
+      {list.length === 0 ? (
+        <div className="empty-state"><Briefcase size={48} weight="duotone" /><p>No applications received yet.</p></div>
+      ) : (
+        <div className="card-list">
+          {list.map(a => (
+            <div className="data-card" key={a.id} onClick={() => setSelected(a)} style={{ cursor: 'pointer' }}>
+              <div className="data-card-row">
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', flex: 1, minWidth: 0 }}>
+                  <div className="data-card-avatar" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
+                    {a.nameEn?.[0] || 'A'}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="data-card-name">{a.nameEn} ({a.nameBn})</div>
+                    <div className="data-card-sub">{a.postAppliedFor} · {a.mobile}</div>
+                  </div>
+                </div>
+                <div className={`badge badge-${a.status === 'approved' ? 'green' : a.status === 'rejected' ? 'red' : 'amber'}`}>
+                  {a.status}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Modal
+        open={!!selected} onClose={() => setSelected(null)}
+        title="Application Details"
+        panelIcon={<Briefcase size={24} color="white" weight="duotone" />}
+        panelTitle="Review Application"
+        panelDesc="Carefully review all details before approving or rejecting candidate."
+        footer={
+          selected && selected.status === 'pending' ? (
+            <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => updateStatus(selected.id, 'rejected')} disabled={actionId !== null}>
+                {actionId === `rejected-${selected.id}` ? <Spinner size={18} style={{animation:'spin 1s linear infinite'}} /> : <XCircle size={18} />} Reject
+              </button>
+              <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => updateStatus(selected.id, 'approved')} disabled={actionId !== null}>
+                {actionId === `approved-${selected.id}` ? <Spinner size={18} style={{animation:'spin 1s linear infinite'}} /> : <CheckCircle size={18} />} Approve
+              </button>
+            </div>
+          ) : (
+            <button className="btn btn-outline btn-full" onClick={() => setSelected(null)}>Close</button>
+          )
+        }>
+        {selected && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'flex', gap: 20, alignItems: 'center', padding: 15, background: 'var(--grey-50)', borderRadius: 12 }}>
+              <img src={selected.photoUrl} alt="Photo" style={{ width: 100, height: 100, borderRadius: 10, objectFit: 'cover', border: '2px solid white', boxShadow: 'var(--shadow-sm)' }} />
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{selected.nameEn}</h3>
+                <p style={{ margin: '4px 0 0', color: 'var(--primary)', fontWeight: 700 }}>{selected.postAppliedFor}</p>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Applied on {new Date(selected.date).toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            <div className="m-grid m-grid-2">
+              <div>
+                <h4 style={{ borderBottom: '1px solid var(--border)', paddingBottom: 6, marginBottom: 12, color: 'var(--primary)' }}>Personal Bio</h4>
+                <DetailRow label="Name (Bengali)" value={selected.nameBn} />
+                <DetailRow label="Father's Name" value={selected.fatherName} />
+                <DetailRow label="Mother's Name" value={selected.motherName} />
+                <DetailRow label="NID" value={selected.nid} />
+                <DetailRow label="Age / DOB" value={`${selected.age || '—'} years (${selected.dob})`} />
+                <DetailRow label="Marital Status" value={selected.maritalStatus} />
+                <DetailRow label="Spouse Name" value={selected.spouseName} />
+              </div>
+              <div>
+                <h4 style={{ borderBottom: '1px solid var(--border)', paddingBottom: 6, marginBottom: 12, color: 'var(--primary)' }}>Contact & Financial</h4>
+                <DetailRow label="Mobile" value={selected.mobile} />
+                <DetailRow label="Email" value={selected.email} />
+                <DetailRow label="Bank" value={`${selected.bankName} (${selected.branch})`} />
+                <DetailRow label="Mobile Banking" value={`${selected.mobileBankingType}: ${selected.mobileBankingNumber}`} />
+                <DetailRow label="Present Address" value={selected.presentAddress} />
+                <DetailRow label="Permanent Address" value={selected.permanentAddress} />
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ borderBottom: '1px solid var(--border)', paddingBottom: 6, marginBottom: 12, color: 'var(--primary)' }}>Education</h4>
+              <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--grey-50)', textAlign: 'left' }}>
+                    <th style={{ padding: 6, border: '1px solid var(--border)' }}>Exam</th>
+                    <th style={{ padding: 6, border: '1px solid var(--border)' }}>Subject</th>
+                    <th style={{ padding: 6, border: '1px solid var(--border)' }}>Result</th>
+                    <th style={{ padding: 6, border: '1px solid var(--border)' }}>Year</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(selected.education || []).map((e, idx) => (
+                    <tr key={idx}>
+                      <td style={{ padding: 6, border: '1px solid var(--border)' }}>{e.examName}</td>
+                      <td style={{ padding: 6, border: '1px solid var(--border)' }}>{e.subject}</td>
+                      <td style={{ padding: 6, border: '1px solid var(--border)' }}>{e.result}</td>
+                      <td style={{ padding: 6, border: '1px solid var(--border)' }}>{e.passingYear}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div>
+              <h4 style={{ borderBottom: '1px solid var(--border)', paddingBottom: 6, marginBottom: 12, color: 'var(--primary)' }}>Nominee Details</h4>
+              <div className="m-grid m-grid-2">
+                <DetailRow label="Name" value={selected.nomineeName} />
+                <DetailRow label="Mobile" value={selected.nomineeMobile} />
+                <DetailRow label="Relationship" value={selected.nomineeRelationship} />
+                <DetailRow label="Address" value={selected.nomineeAddress} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 20 }}>
+              <div style={{ flex: 1 }}>
+                <h4 style={{ marginBottom: 10 }}>Signature</h4>
+                <img src={selected.signatureUrl} alt="Signature" style={{ width: '100%', maxHeight: 100, objectFit: 'contain', background: 'white', border: '1px solid var(--border)', borderRadius: 8 }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h4 style={{ marginBottom: 10 }}>Status Note</h4>
+                <textarea className="form-input" placeholder="Add a note (e.g. why rejected/approved)..." value={note} onChange={e => setNote(e.target.value)} disabled={selected.status !== 'pending'} rows={3} />
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+
 const Settings = () => {
   const { t } = useTranslation();
   const [s, setS] = useState({ registrationFee: 365, employeeCanViewAll: false, paymentMethods: [] });
@@ -1562,9 +1733,13 @@ const Settings = () => {
             <label className="form-label">{t('reg_fee')}</label>
             <input className="form-input" type="number" value={s.registrationFee} onChange={e => setS({ ...s, registrationFee: +e.target.value })} />
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', marginBottom: 12 }}>
             <input type="checkbox" style={{ width: 20, height: 20, accentColor: 'var(--primary)' }} checked={s.employeeCanViewAll} onChange={e => setS({ ...s, employeeCanViewAll: e.target.checked })} />
             <span style={{ fontWeight: 600, color: 'var(--text-body)', fontSize: '0.95rem' }}>{t('employee_view_all')}</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+            <input type="checkbox" style={{ width: 20, height: 20, accentColor: 'var(--primary)' }} checked={s.jobApplicationsEnabled} onChange={e => setS({ ...s, jobApplicationsEnabled: e.target.checked })} />
+            <span style={{ fontWeight: 600, color: 'var(--text-body)', fontSize: '0.95rem' }}>Enable Job Applications (ক্যারিয়ার সেকশন চালু করুন)</span>
           </label>
         </div>
 
@@ -1860,6 +2035,7 @@ export default function App() {
               <Route path="/survey"      element={<SurveyForm />} />
               <Route path="/survey-results" element={<SurveyDashboard />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/career"      element={<JobApplications />} />
               <Route path="/settings"    element={<Settings />} />
               <Route path="/requests"    element={<EditRequests />} />
               <Route path="/profile"     element={<StaffProfile />} />
