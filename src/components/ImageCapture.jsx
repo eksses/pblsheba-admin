@@ -99,7 +99,75 @@ const ImageCapture = ({ onImageChange, currentImage }) => {
           <label className="capture-option-btn">
             <ImageIcon size={24} />
             <span>Gallery</span>
-            <input type="file" accept="image
+            <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+          </label>
+          <button type="button" onClick={startCamera} className="capture-option-btn" style={{ marginLeft: 20 }}>
+            <Camera size={24} />
+            <span>Camera</span>
+          </button>
+        </div>
+      )}
+      <style>{`
+        .image-capture-wrap {
+          width: 100%;
+          min-height: 200px;
+          border: 2px dashed var(--border);
+          border-radius: var(--radius-xl);
+          background: var(--card-bg);
+          overflow: hidden;
+          position: relative;
+        }
+        .capture-options {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 200px;
+        }
+        .capture-option-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          color: var(--primary);
+          background: none;
+          border: none;
+        }
+        .image-preview-container {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 4/3;
+        }
+        .image-preview {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .image-remove-btn {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(0,0,0,0.6);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+        .camera-view-container {
+          position: relative;
+          width: 100%;
+          background: black;
+          aspect-ratio: 4/3;
+        }
+        .camera-video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
         .camera-controls {
           position: absolute;

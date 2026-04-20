@@ -1,4 +1,4 @@
-@import url('https:
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 
 :root {
@@ -802,7 +802,7 @@ textarea.form-input {
   border-radius: 20px;
   position: relative;
   overflow: hidden;
-  font-family: 'Outfit', sans-serif;
+  font-family: Outfit, sans-serif;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;

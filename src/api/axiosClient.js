@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http:
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
 });
 
 axiosClient.interceptors.request.use((config) => {
