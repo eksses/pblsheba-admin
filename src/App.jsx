@@ -15,6 +15,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { Spinner, DownloadSimple } from '@phosphor-icons/react';
+import ImageCapture from './components/ImageCapture';
 import './i18n';
 
 /* ─────────────────────────────────────────
@@ -263,8 +264,15 @@ const Modal = ({ open, onClose, title, panelIcon, panelTitle, panelDesc, childre
 ───────────────────────────────────────── */
 const Dashboard = () => {
   const { t } = useTranslation();
-  const [m, setM] = useState({ totalMembers: 0, totalEmployees: 0, pendingApprovals: 0, totalCollected: 0 });
-  useEffect(() => { axiosClient.get('/admin/dashboard').then(r => setM(r.data)).catch(() => {}); }, []);
+  const { dashboardCache, setDashboardCache } = useAuthStore();
+  const [m, setM] = useState(dashboardCache || { totalMembers: 0, totalEmployees: 0, pendingApprovals: 0, totalCollected: 0 });
+  
+  useEffect(() => { 
+    axiosClient.get('/admin/dashboard').then(r => {
+      setM(r.data);
+      setDashboardCache(r.data);
+    }).catch(() => {}); 
+  }, []);
 
   const cards = [
     { key: 'total_members',    value: m.totalMembers,     icon: Users,              cls: 'green'  },
@@ -583,7 +591,7 @@ const Members = () => {
           </div>
           <div className="form-group">
             <label className="form-label">{t('profile_photo')} *</label>
-            <input className="form-input" type="file" accept="image/*" style={{ padding: 12, cursor: 'pointer' }} onChange={e => set('image', e.target.files[0])} required />
+            <ImageCapture onImageChange={(file) => set('image', file)} currentImage={null} />
           </div>
         </form>
       </Modal>
@@ -1202,7 +1210,7 @@ const Employees = () => {
   const [saving, setSaving] = useState(false);
   const [actionId, setActionId] = useState(null);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '' });
+  const [form, setForm] = useState({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '', image: null, currentImageUrl: null });
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [pdfTarget, setPdfTarget] = useState(null);
   const idCardRef = useRef(null);
@@ -1246,7 +1254,7 @@ const Employees = () => {
 
   const openNew = () => {
     setEditId(null);
-    setForm({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '' });
+    setForm({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '', image: null, currentImageUrl: null });
     setOpen(true);
   };
 
@@ -1259,7 +1267,9 @@ const Employees = () => {
       nid: emp.nid || '',
       email: emp.email || '',
       fatherName: emp.fatherName || '',
-      address: emp.address || ''
+      address: emp.address || '',
+      image: null,
+      currentImageUrl: emp.imageUrl || null
     });
     setOpen(true);
   };
@@ -1278,12 +1288,16 @@ const Employees = () => {
   const submit = async (e) => {
     e.preventDefault(); setSaving(true);
     try {
+      const fd = new FormData();
+      Object.entries(form).forEach(([k, v]) => {
+        if (v !== null && k !== 'currentImageUrl') fd.append(k, v);
+      });
+
       if (editId) {
-        const payload = { ...form };
-        if (!payload.password) delete payload.password;
-        await axiosClient.patch(`/admin/users/${editId}`, payload);
+        if (!form.password) fd.delete('password');
+        await axiosClient.patch(`/admin/users/${editId}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       } else {
-        await axiosClient.post('/admin/employees', form);
+        await axiosClient.post('/admin/employees', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       }
       setOpen(false);
       await fetch();
@@ -1401,6 +1415,10 @@ const Employees = () => {
             </div>
           </div>
           <div className="form-group">
+            <label className="form-label">{t('profile_photo')}</label>
+            <ImageCapture onImageChange={(file) => set('image', file)} currentImage={form.currentImageUrl} />
+          </div>
+          <div className="form-group">
             <label className="form-label">{editId ? 'New Password (leave blank to keep current)' : t('temp_password') + ' *'}</label>
             <input className="form-input" type="password" value={form.password} onChange={e => set('password', e.target.value)} required={!editId} />
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>{t('temp_password_hint')}</span>
@@ -1417,7 +1435,11 @@ const Employees = () => {
             </div>
             <div className="idce-body">
               <div className="idce-avatar">
-                {pdfTarget.name?.[0]?.toUpperCase()}
+                {pdfTarget.imageUrl ? (
+                  <img src={pdfTarget.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+                ) : (
+                  pdfTarget.name?.[0]?.toUpperCase()
+                )}
               </div>
               <div className="idce-name">{pdfTarget.name}</div>
               <div className="idce-status">Official Staff Member</div>
@@ -1573,11 +1595,29 @@ const Settings = () => {
    STAFF PROFILE (MY ID)
 ───────────────────────────────────────── */
 const StaffProfile = () => {
-  const { user } = useAuthStore();
+  const { user, token, login } = useAuthStore();
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const idCardRef = useRef(null);
 
   if (!user) return null;
+
+  const handleImageChange = async (file) => {
+    if (!file) return;
+    setUpdating(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const { data } = await axiosClient.patch('/users/profile', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      login(data.user, token);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update profile picture");
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const handleDownloadPdf = async () => {
     setGeneratingPdf(true);
@@ -1616,8 +1656,25 @@ const StaffProfile = () => {
         <div className="ppc-header"></div>
         <div className="ppc-body">
           <div className="ppc-avatar">
-            {user.name?.[0]?.toUpperCase()}
+            {user.imageUrl ? (
+              <img src={user.imageUrl} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+            ) : (
+              user.name?.[0]?.toUpperCase()
+            )}
+            {updating && (
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'inherit' }}>
+                <Spinner size={24} style={{ animation: 'spin 1s linear infinite' }} />
+              </div>
+            )}
           </div>
+          
+          <div style={{ maxWidth: '300px', margin: '0 auto 20px' }}>
+            <ImageCapture onImageChange={handleImageChange} currentImage={null} />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: 8 }}>
+              Take a photo or choose from gallery to update your profile picture.
+            </p>
+          </div>
+
           <div className="ppc-name">{user.name}</div>
           <div className="ppc-role">{user.role === 'owner' ? 'System Administrator' : 'Official Staff Member'}</div>
 
@@ -1655,7 +1712,11 @@ const StaffProfile = () => {
           </div>
           <div className="idce-body">
             <div className="idce-avatar">
-              {user.name?.[0]?.toUpperCase()}
+              {user.imageUrl ? (
+                <img src={user.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+              ) : (
+                user.name?.[0]?.toUpperCase()
+              )}
             </div>
             <div className="idce-name">{user.name}</div>
             <div className="idce-status">{user.role === 'owner' ? 'Owner' : 'Official Staff Member'}</div>
