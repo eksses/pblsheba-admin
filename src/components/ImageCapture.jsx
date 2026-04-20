@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Camera, Image as ImageIcon, X } from 'lucide-react';
+import { Camera, Image as ImageIcon, X } from '@phosphor-icons/react';
 
 const ImageCapture = ({ onImageChange, currentImage }) => {
   const [preview, setPreview] = useState(currentImage);
