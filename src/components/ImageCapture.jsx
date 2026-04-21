@@ -33,7 +33,8 @@ const ImageCapture = ({ onImageChange, currentImage }) => {
       setIsCapturing(true);
     } catch (err) {
       console.error("Camera access error:", err);
-      alert("Could not access camera. Please check permissions.");
+      if (window.__pbl_toast) window.__pbl_toast.error("Could not access camera. Please check permissions.");
+      else alert("Could not access camera. Please check permissions.");
     }
   };
 

@@ -5,7 +5,8 @@ import {
   ChartBarHorizontal, Users, IdentificationCard, ShieldCheck,
   Trash, Gear, Trophy, Plus, X, CheckCircle, XCircle, SignOut,
   Leaf, HandHeart, Money, WarningCircle, DotsThree, Pencil,
-  House, ClipboardText, FileArrowDown, Briefcase
+  House, ClipboardText, FileArrowDown, Briefcase,
+  Spinner, DownloadSimple, CaretLeft, Warning
 } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import axiosClient from './api/axiosClient';
@@ -14,10 +15,75 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
-import { Spinner, DownloadSimple } from '@phosphor-icons/react';
 import ImageCapture from './components/ImageCapture';
 import './i18n';
 
+// UI Helpers
+const useToast = () => {
+  const context = window.__pbl_toast;
+  if (!context) throw new Error('useToast must be used within ToastProvider');
+  return context;
+};
+
+const ToastProvider = ({ children }) => {
+  const [toasts, setToasts] = useState([]);
+  const add = (type, message) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    setToasts(t => [...t, { id, type, message }]);
+    setTimeout(() => remove(id), type === 'error' ? 6000 : 3500);
+  };
+  const remove = (id) => {
+    setToasts(t => t.map(x => x.id === id ? { ...x, removing: true } : x));
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 200);
+  };
+  window.__pbl_toast = {
+    success: (m) => add('success', m),
+    error: (m) => add('error', m),
+    info: (m) => add('info', m)
+  };
+  return (
+    <>
+      {children}
+      {createPortal(
+        <div className="toast-container">
+          {toasts.map(t => (
+            <div key={t.id} className={`toast toast-${t.type} ${t.removing ? 'removing' : ''}`} onClick={() => remove(t.id)}>
+              <div className="toast-icon">
+                {t.type === 'success' && <CheckCircle weight="bold" />}
+                {t.type === 'error' && <Warning weight="bold" />}
+                {t.type === 'info' && <ShieldCheck weight="bold" />}
+              </div>
+              <div className="toast-content">{t.message}</div>
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+};
+
+const ConfirmModal = ({ open, title, message, onConfirm, onCancel, type = 'danger' }) => {
+  if (!open) return null;
+  return createPortal(
+    <div className="confirm-modal-backdrop">
+      <div className="confirm-modal-content fade-up">
+        <div style={{ padding: 24, textAlign: 'center' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: type === 'danger' ? 'var(--red-50)' : 'var(--blue-50)', color: type === 'danger' ? 'var(--red-600)' : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            {type === 'danger' ? <Warning size={32} weight="duotone" /> : <ShieldCheck size={32} weight="duotone" />}
+          </div>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-heading)', marginBottom: 8 }}>{title}</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>{message}</p>
+        </div>
+        <div style={{ display: 'flex', borderTop: '1px solid var(--border)' }}>
+          <button className="btn btn-ghost" style={{ flex: 1, borderRadius: 0, height: 56, fontWeight: 700 }} onClick={onCancel}>Cancel</button>
+          <button className={`btn btn-${type === 'danger' ? 'danger' : 'primary'}`} style={{ flex: 1, borderRadius: 0, height: 56, fontWeight: 700 }} onClick={onConfirm}>Confirm</button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 const LangToggle = () => {
   const { i18n } = useTranslation();
@@ -297,32 +363,66 @@ const Dashboard = () => {
 
 const Approvals = () => {
   const { t } = useTranslation();
+  const toast = useToast();
   const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState(null);
+  const [confirmData, setConfirmData] = useState(null);
 
-  const fetch = () => axiosClient.get('/admin/pending').then(r => setList(r.data)).catch(() => {});
+  const fetch = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axiosClient.get('/admin/pending');
+      setList(data);
+    } catch {
+      toast.error(t('error_fetch'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => { fetch(); }, []);
 
-  const approve = async (id) => {
-    if (!confirm(t('confirm_approve'))) return;
-    setActionId(`approve-${id}`);
-    await axiosClient.patch(`/admin/approve/${id}`, { status: 'approved', paymentVerified: true }).catch(() => alert('Error'));
-    await fetch();
-    setActionId(null);
+  const handleApprove = async (id) => {
+    setActionId(id);
+    try {
+      await axiosClient.patch(`/admin/approve/${id}`, { status: 'approved', paymentVerified: true });
+      toast.success(t('success_approve'));
+      fetch();
+    } catch { 
+      toast.error(t('error_approve'));
+    } finally {
+      setActionId(null);
+      setConfirmData(null);
+    }
   };
-  const reject = async (id) => {
-    if (!confirm(t('confirm_reject'))) return;
-    setActionId(`reject-${id}`);
-    await axiosClient.patch(`/admin/approve/${id}`, { status: 'rejected', paymentVerified: false }).catch(() => alert('Error'));
-    await fetch();
-    setActionId(null);
+
+  const handleReject = async (id) => {
+    setActionId(id);
+    try {
+      await axiosClient.patch(`/admin/approve/${id}`, { status: 'rejected', paymentVerified: false });
+      toast.success(t('success_reject'));
+      fetch();
+    } catch { 
+      toast.error(t('error_reject'));
+    } finally {
+      setActionId(null);
+      setConfirmData(null);
+    }
   };
-  const remove = async (id) => {
-    if (!confirm(t('confirm_delete'))) return;
-    setActionId(`delete-${id}`);
-    await axiosClient.delete(`/admin/users/${id}`).catch(() => alert('Error'));
-    await fetch();
-    setActionId(null);
+
+  const handleDelete = async (id) => {
+    setActionId(id);
+    try {
+      await axiosClient.delete(`/admin/users/${id}`);
+      toast.success(t('success_delete'));
+      fetch();
+    } catch { 
+      toast.error(t('error_delete'));
+    } finally {
+      setActionId(null);
+      setConfirmData(null);
+    }
   };
 
   return (
@@ -334,7 +434,9 @@ const Approvals = () => {
         </div>
       </div>
 
-      {list.length === 0 ? (
+      {loading ? (
+        <div className="shimmer" style={{ height: 200, borderRadius: 20 }} />
+      ) : list.length === 0 ? (
         <div className="empty-state">
           <CheckCircle size={48} weight="duotone" />
           <p>{t('all_caught_up')}</p>
@@ -374,20 +476,32 @@ const Approvals = () => {
               </div>
 
               <div className="data-card-actions">
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => approve(u._id)} disabled={actionId !== null}>
-                  {actionId === `approve-${u._id}` ? <Spinner size={18} style={{animation: 'spin 1s linear infinite'}} /> : <CheckCircle size={18} weight="bold" />} {t('approve')}
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setConfirmData({ type: 'approve', id: u._id, name: u.name })} disabled={actionId !== null}>
+                  {actionId === u._id ? <Spinner size={18} style={{animation: 'spin 1s linear infinite'}} /> : <CheckCircle size={18} weight="bold" />} {t('approve')}
                 </button>
-                <button className="btn btn-danger" onClick={() => reject(u._id)} title={t('reject')} disabled={actionId !== null}>
-                  {actionId === `reject-${u._id}` ? <Spinner size={18} style={{animation: 'spin 1s linear infinite'}} /> : <XCircle size={18} weight="bold" />}
+                <button className="btn btn-danger" onClick={() => setConfirmData({ type: 'reject', id: u._id, name: u.name })} title={t('reject')} disabled={actionId !== null}>
+                  {actionId === u._id ? <Spinner size={18} style={{animation: 'spin 1s linear infinite'}} /> : <XCircle size={18} weight="bold" />}
                 </button>
-                <button className="btn btn-ghost btn-icon" style={{ color: actionId !== null ? 'var(--text-muted)' : 'var(--danger)' }} onClick={() => remove(u._id)} title={t('delete')} disabled={actionId !== null}>
-                  {actionId === `delete-${u._id}` ? <Spinner size={18} style={{animation: 'spin 1s linear infinite'}} /> : <Trash size={18} weight="bold" />}
+                <button className="btn btn-ghost btn-icon" style={{ color: actionId !== null ? 'var(--text-muted)' : 'var(--danger)' }} onClick={() => setConfirmData({ type: 'delete', id: u._id, name: u.name })} title={t('delete')} disabled={actionId !== null}>
+                  {actionId === u._id ? <Spinner size={18} style={{animation: 'spin 1s linear infinite'}} /> : <Trash size={18} weight="bold" />}
                 </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmData}
+        title={confirmData?.type === 'approve' ? t('approve_title') : confirmData?.type === 'reject' ? t('reject_title') : t('delete_title')}
+        message={confirmData?.type === 'approve' ? t('approve_msg', { name: confirmData.name }) : confirmData?.type === 'reject' ? t('reject_msg', { name: confirmData.name }) : t('delete_msg', { name: confirmData?.name })}
+        onConfirm={() => {
+          if (confirmData.type === 'approve') handleApprove(confirmData.id);
+          else if (confirmData.type === 'reject') handleReject(confirmData.id);
+          else handleDelete(confirmData.id);
+        }}
+        onCancel={() => setConfirmData(null)}
+      />
     </div>
   );
 };
@@ -395,6 +509,7 @@ const Approvals = () => {
 
 const Members = () => {
   const { t } = useTranslation();
+  const toast = useToast();
   const [list, setList] = useState([]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -403,15 +518,24 @@ const Members = () => {
   const [form, setForm] = useState({ name: '', fatherName: '', nid: '', phone: '', paymentNumber: '', paymentMethod: 'bKash', trxId: '', password: '', image: null });
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   
   const location = useLocation();
   const staffId = new URLSearchParams(location.search).get('staffId');
 
-  const fetch = () => axiosClient.get('/admin/members').then(r => setList(r.data)).catch(() => {});
-  useEffect(() => { fetch(); }, []);
+  const fetchMembers = async () => {
+    try {
+      const { data } = await axiosClient.get('/admin/members');
+      setList(data);
+    } catch {
+      toast.error(t('error_fetch'));
+    }
+  };
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const setEdit = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
+  useEffect(() => { fetchMembers(); }, []);
+
+  const setK = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const setEditK = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
 
   const filteredList = list.filter(m => {
     if (staffId && m.referredById !== staffId) return false;
@@ -433,31 +557,39 @@ const Members = () => {
       const data = { ...editForm };
       if (!data.password) delete data.password;
       await axiosClient.patch(`/admin/users/${data._id || data.id}`, data);
+      toast.success(t('success_update'));
       setEditOpen(false);
-      await fetch();
-    } catch(err) { alert(err.response?.data?.message || 'Error'); }
+      await fetchMembers();
+    } catch(err) { toast.error(err.response?.data?.message || t('error_update')); }
     finally { setSaving(false); }
   };
 
-  const submit = async (e) => {
+  const submitAdd = async (e) => {
     e.preventDefault(); setSaving(true);
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => v && fd.append(k, v));
       await axiosClient.post('/admin/members', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      toast.success(t('success_register'));
       setOpen(false);
       setForm({ name: '', fatherName: '', nid: '', phone: '', paymentNumber: '', paymentMethod: 'bKash', trxId: '', password: '', image: null });
-      await fetch();
-    } catch(err) { alert(err.response?.data?.message || 'Error'); }
+      await fetchMembers();
+    } catch(err) { toast.error(err.response?.data?.message || t('error_register')); }
     finally { setSaving(false); }
   };
 
-  const remove = async (id) => {
-    if (!confirm(t('delete') + '?')) return;
-    setActionId(`delete-${id}`);
-    await axiosClient.delete(`/admin/users/${id}`).catch(() => alert('Error'));
-    await fetch();
-    setActionId(null);
+  const removeMember = async (id) => {
+    setActionId(id);
+    try {
+      await axiosClient.delete(`/admin/users/${id}`);
+      toast.success(t('success_delete'));
+      await fetchMembers();
+    } catch { 
+      toast.error(t('error_delete'));
+    } finally {
+      setActionId(null);
+      setConfirmDelete(null);
+    }
   };
 
   return (
@@ -498,18 +630,14 @@ const Members = () => {
                   <div style={{ minWidth: 0 }}>
                     <div className="data-card-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</div>
                     <div className="data-card-sub">{m.phone} · {t('nid')}: <span className="font-mono">{m.nid || '–'}</span></div>
-                    <div className="data-card-sub" style={{ marginTop: '4px' }}>
-                      {m.fatherName ? `Father: ${m.fatherName} · ` : ''}
-                      Email: {m.email || '–'}
-                    </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(m)} title="Edit" disabled={actionId !== null}>
+                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(m)} title="Edit">
                     <Pencil size={16} weight="bold" />
                   </button>
-                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(m._id || m.id)} title="Delete" disabled={actionId !== null}>
-                    {actionId === `delete-${m._id || m.id}` ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : <Trash size={16} weight="bold" />}
+                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => setConfirmDelete(m)} title="Delete">
+                    {actionId === (m._id || m.id) ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : <Trash size={16} weight="bold" />}
                   </button>
                 </div>
               </div>
@@ -527,119 +655,113 @@ const Members = () => {
         footer={
           <>
             <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setOpen(false)}>{t('cancel')}</button>
-            <button className="btn btn-primary" style={{ flex: 2 }} form="member-form" type="submit" disabled={saving}>
+            <button className="btn btn-primary" style={{ flex: 2 }} onClick={submitAdd} disabled={saving}>
               {saving ? t('saving') : t('register_member')}
             </button>
           </>
         }>
-        <form id="member-form" onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
+        <form id="member-form" style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
           <div className="form-group">
             <label className="form-label">{t('full_name')} *</label>
-            <input className="form-input" placeholder={t('as_per_nid')} value={form.name} onChange={e => set('name', e.target.value)} required />
+            <input className="form-input" placeholder={t('as_per_nid')} value={form.name} onChange={e => setK('name', e.target.value)} required />
           </div>
           <div className="form-group">
             <label className="form-label">{t('father_name')} *</label>
-            <input className="form-input" value={form.fatherName} onChange={e => set('fatherName', e.target.value)} required />
+            <input className="form-input" value={form.fatherName} onChange={e => setK('fatherName', e.target.value)} required />
           </div>
           <div className="m-grid m-grid-2">
             <div className="form-group">
               <label className="form-label">{t('phone')} *</label>
-              <input className="form-input" type="tel" placeholder="017-XXXXXXXX" value={form.phone} onChange={e => set('phone', e.target.value)} required />
+              <input className="form-input" type="tel" placeholder="017-XXXXXXXX" value={form.phone} onChange={e => setK('phone', e.target.value)} required />
             </div>
             <div className="form-group">
               <label className="form-label">{t('nid')} *</label>
-              <input className="form-input" value={form.nid} onChange={e => set('nid', e.target.value)} required />
-            </div>
-          </div>
-          <div className="m-grid m-grid-2">
-            <div className="form-group">
-              <label className="form-label">{t('payment_method')} *</label>
-              <select className="form-input" value={form.paymentMethod} onChange={e => set('paymentMethod', e.target.value)}>
-                <option value="bKash">bKash</option>
-                <option value="Nagad">Nagad</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">{t('trx_id_label')} *</label>
-              <input className="form-input" placeholder="TrxID" value={form.trxId} onChange={e => set('trxId', e.target.value)} required />
+              <input className="form-input" value={form.nid} onChange={e => setK('nid', e.target.value)} required />
             </div>
           </div>
           <div className="form-group">
             <label className="form-label">{t('password')} *</label>
-            <input className="form-input" type="password" value={form.password} onChange={e => set('password', e.target.value)} required />
+            <input className="form-input" type="password" value={form.password} onChange={e => setK('password', e.target.value)} required />
           </div>
           <div className="form-group">
             <label className="form-label">{t('profile_photo')} *</label>
-            <ImageCapture onImageChange={(file) => set('image', file)} currentImage={null} />
+            <ImageCapture onImageChange={(file) => setK('image', file)} currentImage={null} />
           </div>
         </form>
       </Modal>
 
-      {}
-      {editForm && (
-        <Modal
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          title="Edit Member"
-          panelIcon={<Pencil size={24} color="white" weight="duotone" />}
-          panelTitle="Edit Details"
-          panelDesc="Update personal information, phone number, or reset password."
-          footer={
-            <>
-              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditOpen(false)}>{t('cancel')}</button>
-              <button className="btn btn-primary" style={{ flex: 2 }} onClick={submitEdit} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
-            </>
-          }
-        >
+      <Modal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit Member"
+        panelIcon={<Pencil size={24} color="white" weight="duotone" />}
+        panelTitle="Edit Details"
+        panelDesc="Update personal information, phone number, or reset password."
+        footer={
+          <>
+            <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditOpen(false)}>{t('cancel')}</button>
+            <button className="btn btn-primary" style={{ flex: 2 }} onClick={submitEdit} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+          </>
+        }
+      >
+        {editForm && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="form-group">
               <label className="form-label">{t('full_name')} *</label>
-              <input type="text" className="form-input" value={editForm.name} onChange={e => setEdit('name', e.target.value)} required />
+              <input type="text" className="form-input" value={editForm.name} onChange={e => setEditK('name', e.target.value)} required />
             </div>
             <div className="form-group">
               <label className="form-label">Father's / Husband's Name</label>
-              <input type="text" className="form-input" value={editForm.fatherName || ''} onChange={e => setEdit('fatherName', e.target.value)} />
+              <input type="text" className="form-input" value={editForm.fatherName || ''} onChange={e => setEditK('fatherName', e.target.value)} />
             </div>
             <div className="m-grid m-grid-2">
               <div className="form-group">
                 <label className="form-label">{t('phone')} *</label>
-                <input type="tel" className="form-input" value={editForm.phone} onChange={e => setEdit('phone', e.target.value)} required />
+                <input type="tel" className="form-input" value={editForm.phone} onChange={e => setEditK('phone', e.target.value)} required />
               </div>
               <div className="form-group">
                 <label className="form-label">{t('nid')}</label>
-                <input type="text" className="form-input" value={editForm.nid || ''} onChange={e => setEdit('nid', e.target.value)} />
+                <input type="text" className="form-input" value={editForm.nid || ''} onChange={e => setEditK('nid', e.target.value)} />
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label">Email</label>
-              <input type="email" className="form-input" value={editForm.email || ''} onChange={e => setEdit('email', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Address</label>
-              <input type="text" className="form-input" value={editForm.address || ''} onChange={e => setEdit('address', e.target.value)} />
-            </div>
-            <div className="form-group">
               <label className="form-label">New Password (leave blank to keep current)</label>
-              <input type="password" className="form-input" placeholder="********" value={editForm.password || ''} onChange={e => setEdit('password', e.target.value)} />
+              <input type="password" className="form-input" placeholder="********" value={editForm.password || ''} onChange={e => setEditK('password', e.target.value)} />
             </div>
           </div>
-        </Modal>
-      )}
+        )}
+      </Modal>
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        title={t('delete_title')}
+        message={t('delete_msg', { name: confirmDelete?.name })}
+        onConfirm={() => removeMember(confirmDelete._id || confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };
 
 
-
-
 const EditRequests = () => {
   const { t } = useTranslation();
+  const toast = useToast();
   const [list, setList] = useState([]);
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [actionId, setActionId] = useState(null);
+  const [confirmDismiss, setConfirmDismiss] = useState(null);
 
-  const fetch = () => axiosClient.get('/admin/edit-requests').then(r => setList(r.data)).catch(() => {});
+  const fetch = async () => {
+    try {
+      const { data } = await axiosClient.get('/admin/edit-requests');
+      setList(data);
+    } catch {
+      toast.error(t('error_fetch'));
+    }
+  };
   useEffect(() => { fetch(); }, []);
 
   const setEdit = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
@@ -655,16 +777,38 @@ const EditRequests = () => {
       const data = { ...editForm };
       if (!data.password) delete data.password;
       await axiosClient.patch(`/admin/users/${data._id}`, data);
+      toast.success(t('success_update'));
       setEditOpen(false);
       fetch();
-    } catch(err) { alert(err.response?.data?.message || 'Error'); }
+    } catch(err) { toast.error(err.response?.data?.message || t('error_update')); }
     finally { setSaving(false); }
   };
 
-  const dismiss = async (id) => {
-    if (!confirm(t('confirm_dismiss') || 'Are you sure you want to clear this request?')) return;
-    await axiosClient.patch(`/admin/edit-requests/${id}/dismiss`).catch(() => alert('Error'));
-    fetch();
+  const handleApprove = async (id) => {
+    setActionId(id);
+    try {
+      await axiosClient.patch(`/admin/edit-requests/${id}/approve`);
+      toast.success(t('success_approve'));
+      fetch();
+    } catch (err) {
+      toast.error(err.response?.data?.message || t('error_approve'));
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleDismiss = async (id) => {
+    setActionId(id);
+    try {
+      await axiosClient.patch(`/admin/edit-requests/${id}/dismiss`);
+      toast.success(t('success_dismiss'));
+      fetch();
+    } catch {
+      toast.error(t('error_dismiss'));
+    } finally {
+      setActionId(null);
+      setConfirmDismiss(null);
+    }
   };
 
   return (
@@ -763,6 +907,7 @@ const EditRequests = () => {
 
 const SurveyForm = () => {
   const { t } = useTranslation();
+  const toast = useToast();
   const [form, setForm] = useState({
     name: '', fathersName: '', wardNo: '', farmAnimals: '', farmableLand: '',
     houseType: 'tin_shed', familyMembers: '', gender: 'male', childrenBoy: '',
@@ -784,9 +929,10 @@ const SurveyForm = () => {
         houseType: 'tin_shed', familyMembers: '', gender: 'male', childrenBoy: '',
         childrenGirl: '', monthlyIncome: '', phone: ''
       });
+      toast.success(t('success_survey'));
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Error submitting survey');
+      toast.error(err.response?.data?.message || t('error_submitting_survey'));
     } finally {
       setLoading(false);
     }
@@ -897,11 +1043,13 @@ const SurveyForm = () => {
 const SurveyDashboard = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const toast = useToast();
   const [list, setList] = useState([]);
   const [stats, setStats] = useState([]);
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedSurvey, setSelectedSurvey] = useState(null);
+  const [generating, setGenerating] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -913,7 +1061,7 @@ const SurveyDashboard = () => {
         setStats(sData);
       }
     } catch {
-      alert('Error fetching survey data');
+      toast.error(t('error_fetch_data'));
     } finally {
       setLoading(false);
     }
@@ -991,31 +1139,42 @@ const SurveyDashboard = () => {
       doc.text(`PBL Sheba Official Document - Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, {align: 'center'});
     }
     const fileName = 'PBL_Sheba_Surveys_' + dateStr.replace(/\//g, '-') + '.pdf';
-    doc.save(fileName);
+    
+    setGenerating(true);
+    toast.info(t('starting_pdf_export'));
+    try {
+      doc.save(fileName);
+      toast.success(t('pdf_export_success'));
+    } catch (err) {
+      toast.error(t('pdf_export_error'));
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(list.map(s => ({
-      'SL': '',
-      'Name': s.name,
-      'Phone': s.phone,
-      'Father/Husband': s.fathersName,
-      'Ward No': s.wardNo,
-      'House Type': s.houseType,
-      'Family Members': s.familyMembers,
-      'Monthly Income': s.monthlyIncome,
-      'Gender': s.gender,
-      'Boys': s.childrenBoy,
-      'Girls': s.childrenGirl,
-      'Animals': s.farmAnimals,
-      'Farmable Land': s.farmableLand,
-      'Submitted By': s.submittedBy?.name || 'Self',
-      'Date': new Date(s.createdAt).toLocaleDateString()
-    })));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Surveys");
-    const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
-    XLSX.writeFile(wb, 'PBL_Sheba_Surveys_' + dateStr + '.xlsx');
+    toast.info(t('starting_excel_export'));
+    try {
+      const ws = XLSX.utils.json_to_sheet(list.map(s => ({
+        'SL': '',
+        'Name': s.name,
+        'Phone': s.phone,
+        'Father/Husband': s.fathersName,
+        'Ward': s.wardNo,
+        'House Type': s.houseType,
+        'Animals': s.farmAnimals,
+        'Farmable Land': s.farmableLand,
+        'Submitted By': s.submittedBy?.name || 'Self',
+        'Date': new Date(s.createdAt).toLocaleDateString()
+      })));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Surveys");
+      const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
+      XLSX.writeFile(wb, 'PBL_Sheba_Surveys_' + dateStr + '.xlsx');
+      toast.success(t('excel_export_success'));
+    } catch (err) {
+      toast.error(t('excel_export_error'));
+    }
   };
 
   return (
@@ -1026,7 +1185,7 @@ const SurveyDashboard = () => {
           <p className="text-muted">{list.length} {t('surveys')}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-outline btn-sm" onClick={exportPDF}>
+          <button className="btn btn-outline btn-sm" onClick={exportPDF} disabled={generating}>
             <FileArrowDown size={18} /> PDF
           </button>
           <button className="btn btn-outline btn-sm" onClick={exportExcel}>
@@ -1177,6 +1336,7 @@ const SurveyDashboard = () => {
 
 const Employees = () => {
   const { t } = useTranslation();
+  const toast = useToast();
   const [list, setList] = useState([]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1185,6 +1345,7 @@ const Employees = () => {
   const [form, setForm] = useState({ name: '', phone: '', password: '', nid: '', email: '', fatherName: '', address: '', image: null, currentImageUrl: null });
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [pdfTarget, setPdfTarget] = useState(null);
+  const [confirmData, setConfirmData] = useState(null);
   const idCardRef = useRef(null);
 
   useEffect(() => {
@@ -1209,9 +1370,10 @@ const Employees = () => {
       });
       pdf.addImage(imgData, 'PNG', 0, 0, 400, canvas.height * (400 / canvas.width));
       pdf.save(`${emp.name.replace(/ /g, '_')}_Staff_ID_Card.pdf`);
+      toast.success(t('id_card_downloaded'));
     } catch (err) {
       console.error('PDF error', err);
-      alert('Failed to generate PDF.');
+      toast.error(t('error_id_card_pdf'));
     } finally {
       setGeneratingPdf(false);
       setPdfTarget(null);
@@ -1246,15 +1408,18 @@ const Employees = () => {
     setOpen(true);
   };
 
-  const toggleStatus = async (emp) => {
-    const newStatus = emp.status === 'disabled' ? 'approved' : 'disabled';
-    if (!confirm(`Are you sure you want to ${newStatus === 'disabled' ? 'disable' : 'enable'} ${emp.name}?`)) return;
-    setActionId(`toggle-${emp._id || emp.id}`);
+  const toggleStatus = async (id, newStatus) => {
+    setActionId(id);
     try {
-      await axiosClient.patch(`/admin/users/${emp._id || emp.id}`, { status: newStatus });
+      await axiosClient.patch(`/admin/users/${id}`, { status: newStatus });
+      toast.success(t('success_status_update'));
       await fetch();
-    } catch { alert('Error changing status'); }
-    setActionId(null);
+    } catch { 
+      toast.error(t('error_status_update'));
+    } finally {
+      setActionId(null);
+      setConfirmData(null);
+    }
   };
 
   const submit = async (e) => {
@@ -1270,19 +1435,26 @@ const Employees = () => {
         await axiosClient.patch(`/admin/users/${editId}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       } else {
         await axiosClient.post('/admin/employees', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        toast.success(t('success_create_staff'));
       }
       setOpen(false);
       await fetch();
-    } catch(err) { alert(err.response?.data?.message || 'Error'); }
+    } catch(err) { toast.error(err.response?.data?.message || t('error_save')); }
     finally { setSaving(false); }
   };
 
-  const remove = async (id) => {
-    if (!confirm(t('delete') + '?')) return;
-    setActionId(`delete-${id}`);
-    await axiosClient.delete(`/admin/users/${id}`).catch(() => alert('Error'));
-    await fetch();
-    setActionId(null);
+  const removeStaff = async (id) => {
+    setActionId(id);
+    try {
+      await axiosClient.delete(`/admin/users/${id}`);
+      toast.success(t('success_delete'));
+      await fetch();
+    } catch { 
+      toast.error(t('error_delete'));
+    } finally {
+      setActionId(null);
+      setConfirmData(null);
+    }
   };
 
   if (user.role !== 'owner') return (
@@ -1322,8 +1494,8 @@ const Employees = () => {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => toggleStatus(e)} title={e.status === 'disabled' ? 'Enable' : 'Disable'} disabled={actionId !== null}>
-                    {actionId === `toggle-${e._id || e.id}` ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : (e.status === 'disabled' ? <CheckCircle size={16} weight="bold" /> : <XCircle size={16} weight="bold" />)}
+                  <button className="btn btn-outline btn-icon btn-sm" onClick={() => setConfirmData({ type: 'toggle', emp: e })} title={e.status === 'disabled' ? 'Enable' : 'Disable'} disabled={actionId !== null}>
+                    {actionId === e._id || actionId === e.id ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : (e.status === 'disabled' ? <CheckCircle size={16} weight="bold" /> : <XCircle size={16} weight="bold" />)}
                   </button>
                   <button className="btn btn-outline btn-icon btn-sm" onClick={() => setPdfTarget(e)} title="Download Staff PDF" disabled={generatingPdf || actionId !== null}>
                     {generatingPdf && pdfTarget && (pdfTarget._id === e._id || pdfTarget.id === e.id) ? <Spinner size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <DownloadSimple size={16} weight="bold" />}
@@ -1331,8 +1503,8 @@ const Employees = () => {
                   <button className="btn btn-outline btn-icon btn-sm" onClick={() => openEdit(e)} disabled={actionId !== null}>
                     <Pencil size={16} weight="bold" />
                   </button>
-                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => remove(e._id || e.id)} disabled={actionId !== null}>
-                    {actionId === `delete-${e._id || e.id}` ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : <Trash size={16} weight="bold" />}
+                  <button className="btn btn-danger btn-icon btn-sm" onClick={() => setConfirmData({ type: 'delete', emp: e })} disabled={actionId !== null}>
+                    {actionId === e._id || actionId === e.id ? <Spinner size={16} style={{animation: 'spin 1s linear infinite'}} /> : <Trash size={16} weight="bold" />}
                   </button>
                 </div>
               </div>
@@ -1340,6 +1512,17 @@ const Employees = () => {
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmData}
+        title={confirmData?.type === 'toggle' ? (confirmData.emp.status === 'disabled' ? 'Enable Staff' : 'Disable Staff') : t('delete_title')}
+        message={confirmData?.type === 'toggle' ? `Are you sure you want to ${confirmData.emp.status === 'disabled' ? 'enable' : 'disable'} ${confirmData.emp.name}?` : t('delete_msg', { name: confirmData?.emp.name })}
+        onConfirm={() => {
+          if (confirmData.type === 'toggle') toggleStatus(confirmData.emp._id || confirmData.emp.id, confirmData.emp.status === 'disabled' ? 'approved' : 'disabled');
+          else removeStaff(confirmData.emp._id || confirmData.emp.id);
+        }}
+        onCancel={() => setConfirmData(null)}
+      />
 
       <Modal
         open={open} onClose={() => setOpen(false)}
@@ -1503,24 +1686,30 @@ const DetailRow = ({ label, value }) => (
 
 const JobApplications = () => {
   const { t } = useTranslation();
+  const toast = useToast();
   const [list, setList] = useState([]);
   const [selected, setSelected] = useState(null);
   const [actionId, setActionId] = useState(null);
   const [note, setNote] = useState('');
+  const [confirmData, setConfirmData] = useState(null);
 
   const fetch = () => axiosClient.get('/admin/career/applications').then(r => setList(r.data)).catch(() => {});
   useEffect(() => { fetch(); }, []);
 
-  const updateStatus = async (id, status) => {
-    if (!confirm(`Are you sure you want to ${status} this application?`)) return;
+  const handleUpdateStatus = async (id, status) => {
     setActionId(`${status}-${id}`);
     try {
       await axiosClient.patch(`/admin/career/applications/${id}`, { status, statusNote: note });
+      toast.success(t('success_status_update'));
       setSelected(null);
       setNote('');
       await fetch();
-    } catch { alert('Error updating status'); }
-    setActionId(null);
+    } catch { 
+      toast.error(t('error_status_update'));
+    } finally {
+      setActionId(null);
+      setConfirmData(null);
+    }
   };
 
   return (
@@ -1566,10 +1755,10 @@ const JobApplications = () => {
         footer={
           selected && selected.status === 'pending' ? (
             <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => updateStatus(selected.id, 'rejected')} disabled={actionId !== null}>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => setConfirmData({ id: selected.id, status: 'rejected' })} disabled={actionId !== null}>
                 {actionId === `rejected-${selected.id}` ? <Spinner size={18} style={{animation:'spin 1s linear infinite'}} /> : <XCircle size={18} />} Reject
               </button>
-              <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => updateStatus(selected.id, 'approved')} disabled={actionId !== null}>
+              <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => setConfirmData({ id: selected.id, status: 'approved' })} disabled={actionId !== null}>
                 {actionId === `approved-${selected.id}` ? <Spinner size={18} style={{animation:'spin 1s linear infinite'}} /> : <CheckCircle size={18} />} Approve
               </button>
             </div>
@@ -1657,6 +1846,14 @@ const JobApplications = () => {
           </div>
         )}
       </Modal>
+
+      <ConfirmModal
+        open={!!confirmData}
+        title={confirmData?.status === 'approved' ? 'Approve Application' : 'Reject Application'}
+        message={`Are you sure you want to ${confirmData?.status} this application?`}
+        onConfirm={() => handleUpdateStatus(confirmData.id, confirmData.status)}
+        onCancel={() => setConfirmData(null)}
+      />
     </div>
   );
 };
@@ -1672,8 +1869,12 @@ const Settings = () => {
     setSaving(true);
     try { 
       await axiosClient.patch('/admin/settings', s); 
-    } catch { alert('Error saving'); } 
-    finally { setSaving(false); }
+      toast.success(t('success_settings_save'));
+    } catch { 
+      toast.error(t('error_settings_save'));
+    } finally { 
+      setSaving(false); 
+    }
   };
   const updatePM = (i, k, v) => { const pms = [...s.paymentMethods]; pms[i][k] = v; setS({ ...s, paymentMethods: pms }); };
   const togglePM = (i) => updatePM(i, 'isActive', !s.paymentMethods[i].isActive);
@@ -1736,25 +1937,25 @@ const Settings = () => {
 
 
 const StaffProfile = () => {
-  const { user, token, login } = useAuthStore();
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const { user, setUser } = useAuthStore();
+  const { t } = useTranslation();
+  const toast = useToast();
   const [updating, setUpdating] = useState(false);
-  const idCardRef = useRef(null);
-
-  if (!user) return null;
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const idCardRef = useRef();
 
   const handleImageChange = async (file) => {
-    if (!file) return;
     setUpdating(true);
     try {
       const fd = new FormData();
       fd.append('image', file);
-      const { data } = await axiosClient.patch('/users/profile', fd, {
+      const { data } = await axiosClient.post('/admin/profile/image', fd, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      login(data.user, token);
+      setUser({ ...user, imageUrl: data.imageUrl });
+      toast.success(t('profile_image_updated'));
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update profile picture");
+      toast.error(t('error_update_image'));
     } finally {
       setUpdating(false);
     }
@@ -1762,6 +1963,7 @@ const StaffProfile = () => {
 
   const handleDownloadPdf = async () => {
     setGeneratingPdf(true);
+    toast.info(t('generating_id_card'));
     try {
       const canvas = await html2canvas(idCardRef.current, {
         scale: 3,
@@ -1776,9 +1978,10 @@ const StaffProfile = () => {
       });
       pdf.addImage(imgData, 'PNG', 0, 0, 400, canvas.height * (400 / canvas.width));
       pdf.save(`${user.name.replace(/ /g, '_')}_Staff_ID_Card.pdf`);
+      toast.success(t('id_card_downloaded'));
     } catch (err) {
       console.error('PDF error', err);
-      alert('Failed to generate PDF.');
+      toast.error(t('error_id_card_pdf'));
     } finally {
       setGeneratingPdf(false);
     }
@@ -1951,8 +2154,13 @@ const ForceReset = () => {
   const [pw, setPw] = useState('');
   const submit = async (e) => {
     e.preventDefault();
-    try { await axiosClient.patch('/users/change-password', { newPassword: pw }); alert('Updated!'); useAuthStore.getState().logout(); }
-    catch { alert('Error'); }
+    try { 
+      await axiosClient.patch('/users/change-password', { newPassword: pw }); 
+      toast.success(t('success_password_reset'));
+      useAuthStore.getState().logout(); 
+    } catch { 
+      toast.error(t('error_password_reset'));
+    }
   };
   return (
     <div className="login-page">
@@ -1981,29 +2189,31 @@ export default function App() {
   if (user?.firstLogin) return <Router><Routes><Route path="*" element={<ForceReset />} /></Routes></Router>;
 
   return (
-    <Router>
-      <div className="admin-root">
-        <Sidebar />
-        <div className="admin-main">
-          <TopBar />
-          <main className="page-content">
-            <Routes>
-              <Route path="/"            element={user?.role === 'owner' ? <Dashboard /> : <Navigate to="/survey" replace />} />
-              <Route path="/approvals"   element={<Approvals />} />
-              <Route path="/members"     element={<Members />} />
-              <Route path="/employees"   element={<Employees />} />
-              <Route path="/survey"      element={<SurveyForm />} />
-              <Route path="/survey-results" element={<SurveyDashboard />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/career"      element={<JobApplications />} />
-              <Route path="/settings"    element={<Settings />} />
-              <Route path="/requests"    element={<EditRequests />} />
-              <Route path="/profile"     element={<StaffProfile />} />
-            </Routes>
-          </main>
-          <BottomNav />
+    <ToastProvider>
+      <Router>
+        <div className="admin-root">
+          <Sidebar />
+          <div className="admin-main">
+            <TopBar />
+            <main className="page-content">
+              <Routes>
+                <Route path="/"            element={user?.role === 'owner' ? <Dashboard /> : <Navigate to="/survey" replace />} />
+                <Route path="/approvals"   element={<Approvals />} />
+                <Route path="/members"     element={<Members />} />
+                <Route path="/employees"   element={<Employees />} />
+                <Route path="/survey"      element={<SurveyForm />} />
+                <Route path="/survey-results" element={<SurveyDashboard />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/career"      element={<JobApplications />} />
+                <Route path="/settings"    element={<Settings />} />
+                <Route path="/requests"    element={<EditRequests />} />
+                <Route path="/profile"     element={<StaffProfile />} />
+              </Routes>
+            </main>
+            <BottomNav />
+          </div>
         </div>
-      </div>
-    </Router>
+      </Router>
+    </ToastProvider>
   );
 }
