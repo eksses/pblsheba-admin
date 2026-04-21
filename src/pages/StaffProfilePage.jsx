@@ -25,7 +25,9 @@ const StaffProfilePage = () => {
     try {
       const fd = new FormData();
       fd.append('image', file);
-      const { data } = await axiosClient.post('/admin/profile/image', fd);
+      const { data } = await axiosClient.post('/admin/profile/image', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       setUser({ ...user, imageUrl: data.imageUrl });
       toast.success(t('profile_image_updated'));
     } catch (err) {
