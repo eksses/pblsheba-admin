@@ -10,6 +10,7 @@ export const useAuthStore = create(
       dashboardCache: null,
       login: (user, token) => set({ user, token, isAuthenticated: true }),
       logout: () => set({ user: null, token: null, isAuthenticated: false, dashboardCache: null }),
+      setUser: (user) => set({ user }),
       setDashboardCache: (data) => set({ dashboardCache: data }),
     }),
     {

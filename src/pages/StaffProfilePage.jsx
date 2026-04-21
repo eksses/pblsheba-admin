@@ -15,7 +15,7 @@ const StaffProfilePage = () => {
   const { user, setUser } = useAuthStore();
   const { t } = useTranslation();
   const toast = useToast();
-  
+
   const [updating, setUpdating] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const idCardRef = useRef();
@@ -25,13 +25,14 @@ const StaffProfilePage = () => {
     try {
       const fd = new FormData();
       fd.append('image', file);
-      const { data } = await axiosClient.post('/admin/profile/image', fd, {
+
+      const { data } = await axiosClient.patch('/users/profile', fd, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setUser({ ...user, imageUrl: data.imageUrl });
+      setUser({ ...user, imageUrl: data.imageUrl || data.user?.imageUrl });
       toast.success(t('profile_image_updated'));
     } catch (err) {
-      toast.error(t('error_update_image'));
+      toast.error(err.response?.data?.message || err.message || t('error_update_image'));
     } finally {
       setUpdating(false);
     }
@@ -74,37 +75,37 @@ const StaffProfilePage = () => {
           </p>
         </div>
       </div>
-      
+
       <div className="premium-profile-card">
         <div className="ppc-header"></div>
         <div className="ppc-body">
           <div className="ppc-avatar">
             {user.imageUrl ? (
-              <img 
-                src={user.imageUrl} 
-                alt={user.name} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} 
+              <img
+                src={user.imageUrl}
+                alt={user.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }}
               />
             ) : (
               user.name?.[0]?.toUpperCase()
             )}
             {updating && (
-              <div 
-                style={{ 
-                  position: 'absolute', 
-                  inset: 0, 
-                  background: 'rgba(255,255,255,0.7)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  borderRadius: 'inherit' 
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(255,255,255,0.7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 'inherit'
                 }}
               >
                 <Spinner size={24} />
               </div>
             )}
           </div>
-          
+
           <div style={{ maxWidth: '300px', margin: '0 auto 20px' }}>
             <ImageCapture onImageChange={handleImageChange} currentImage={null} />
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: 8 }}>
@@ -137,11 +138,11 @@ const StaffProfilePage = () => {
               <div className="ppc-info-value">{user.fatherName || '—'}</div>
             </div>
           </div>
-          
-          <button 
-            className="btn btn-primary btn-full" 
-            style={{ padding: '14px', fontSize: '1rem' }} 
-            onClick={handleDownloadPdf} 
+
+          <button
+            className="btn btn-primary btn-full"
+            style={{ padding: '14px', fontSize: '1rem' }}
+            onClick={handleDownloadPdf}
             disabled={generatingPdf}
           >
             {generatingPdf ? (
