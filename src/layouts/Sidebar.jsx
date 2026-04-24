@@ -9,9 +9,9 @@ import { ALL_SIDEBAR_NAV, EMPLOYEE_PRIMARY, EMPLOYEE_MORE } from './navigation';
 const Sidebar = () => {
   const { t } = useTranslation();
   const { logout, user } = useAuthStore();
-  
-  const navItems = user?.role === 'owner' 
-    ? ALL_SIDEBAR_NAV 
+
+  const navItems = user?.role === 'owner'
+    ? ALL_SIDEBAR_NAV
     : [...EMPLOYEE_PRIMARY, ...EMPLOYEE_MORE];
 
   return (
@@ -27,13 +27,13 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
-      
+
       <nav className="sidebar-nav">
         {navItems.map(({ to, icon: Icon, key }) => (
-          <NavLink 
-            key={to} 
-            to={to} 
-            end={to === '/'} 
+          <NavLink
+            key={to}
+            to={to}
+            end={to === '/'}
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
           >
             <Icon size={20} weight="duotone" />
@@ -43,6 +43,11 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
+        <div className="dev-info" style={{ padding: '0 0 10px 0', borderBottom: '1px solid #eee', marginBottom: 12, opacity: 0.6 }}>
+          <p style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: '#888', margin: 0 }}>System Developer</p>
+          <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#333', margin: '2px 0' }}>Samir Bhuiyan</p>
+          <p style={{ fontSize: '0.65rem', color: '#666', margin: 0 }}>shamirbhuiyan2@gmail.com</p>
+        </div>
         <LangToggle />
         <div style={{ height: 12 }} />
         <button className="btn btn-outline btn-full btn-sm" onClick={logout}>

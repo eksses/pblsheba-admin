@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { SignOut } from '@phosphor-icons/react';
 import { useAuthStore } from '../store/useAuthStore';
 import LangToggle from '../components/layout/LangToggle';
@@ -7,10 +8,15 @@ import LangToggle from '../components/layout/LangToggle';
 const TopBar = () => {
   const { t } = useTranslation();
   const { logout } = useAuthStore();
+  const navigate = useNavigate();
 
   return (
     <header className="top-bar">
-      <div className="top-bar-brand" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div 
+        className="top-bar-brand" 
+        onClick={() => navigate('/')}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
+      >
         <img src="/logo.png" alt="Logo" style={{ width: 26, height: 26, borderRadius: 6 }} />
         <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>{t('brand_name')}</span>
       </div>
