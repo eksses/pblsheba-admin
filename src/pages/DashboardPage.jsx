@@ -8,6 +8,7 @@ import {
 } from '@phosphor-icons/react';
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
+import { requestAdminNotificationPermission } from '../utils/push';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -15,6 +16,11 @@ const DashboardPage = () => {
   const [metrics, setMetrics] = useState(
     dashboardCache || { totalMembers: 0, totalEmployees: 0, pendingApprovals: 0, totalCollected: 0 }
   );
+  
+  useEffect(() => {
+    // Request admin notifications
+    requestAdminNotificationPermission();
+  }, []);
   
   useEffect(() => { 
     axiosClient.get('/admin/dashboard')
