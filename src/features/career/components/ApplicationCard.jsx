@@ -4,7 +4,7 @@ const ApplicationCard = ({ application, onClick }) => {
   const { nameEn, nameBn, postAppliedFor, mobile, status } = application;
   const id = application.id || application._id;
 
-  const statusClass = status === 'approved' ? 'green' : status === 'rejected' ? 'red' : 'amber';
+  const statusClass = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending';
 
   return (
     <div className="data-card" onClick={() => onClick(application)} style={{ cursor: 'pointer' }}>

@@ -33,10 +33,15 @@ const ApplicationDetails = ({ application, note, onNoteChange }) => {
         />
         <div>
           <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{application.nameEn}</h3>
-          <p style={{ margin: '4px 0 0', color: 'var(--primary)', fontWeight: 700 }}>
-            {application.postAppliedFor}
-          </p>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+            <p style={{ margin: 0, color: 'var(--primary)', fontWeight: 700 }}>
+              {application.postAppliedFor}
+            </p>
+            <div className={`badge badge-${application.status || 'pending'}`}>
+              {application.status || 'pending'}
+            </div>
+          </div>
+          <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Applied on {new Date(application.date).toLocaleDateString()}
           </p>
         </div>
@@ -61,7 +66,6 @@ const ApplicationDetails = ({ application, note, onNoteChange }) => {
           </h4>
           <DetailRow label="Mobile" value={application.mobile} />
           <DetailRow label="Email" value={application.email} />
-          <DetailRow label="Bank" value={`${application.bankName} (${application.branch})`} />
           <DetailRow label="Mobile Banking" value={`${application.mobileBankingType}: ${application.mobileBankingNumber}`} />
           <DetailRow label="Present Address" value={application.presentAddress} />
           <DetailRow label="Permanent Address" value={application.permanentAddress} />

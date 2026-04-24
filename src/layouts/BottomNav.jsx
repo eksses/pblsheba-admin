@@ -73,14 +73,14 @@ const BottomNav = () => {
         {primaryItems.map(({ to, icon: Icon, key }) => (
           <NavLink 
             key={to} to={to} end={to === '/'} 
-            className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+            className={({ isActive }) => `bnav-item ${isActive ? 'active' : ''}`}
           >
-            <Icon size={22} weight="duotone" />
+            <Icon size={24} weight="duotone" />
             <span>{t(key)}</span>
           </NavLink>
         ))}
         <button 
-          className={`bottom-nav-item ${moreOpen ? 'active' : ''}`} 
+          className={`bnav-item ${moreOpen ? 'active' : ''}`} 
           onClick={() => setMoreOpen(!moreOpen)}
           aria-expanded={moreOpen}
         >
