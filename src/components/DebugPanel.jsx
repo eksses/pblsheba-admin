@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Activity, Database, HardDrive, ShieldCheck, ChevronDown, ChevronUp } from '@phosphor-icons/react';
 
-// Move styles to top for better build-tool compatibility
 const panelWrapper = {
   position: 'fixed',
   bottom: '20px',
   right: '20px',
   width: '220px',
-  background: 'rgba(0, 0, 0, 0.9)',
+  background: 'rgba(0, 0, 0, 0.95)',
   backdropFilter: 'blur(10px)',
   border: '1px solid #333',
   borderRadius: '12px',
   color: '#fff',
   zIndex: 9999,
-  fontFamily: '"Inter", sans-serif',
+  fontFamily: 'sans-serif',
   overflow: 'hidden',
   boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
 };
@@ -30,8 +27,8 @@ const header = {
 };
 
 const title = {
-  fontSize: '0.7rem',
-  fontWeight: 900,
+  fontSize: '11px',
+  fontWeight: 'bold',
   letterSpacing: '1px',
   flex: 1
 };
@@ -55,18 +52,12 @@ const footer = {
   borderTop: '1px solid #222',
   display: 'flex',
   justifyContent: 'space-between',
-  fontSize: '0.6rem',
+  fontSize: '10px',
   color: '#666'
 };
 
-const HealthItem = ({ icon: Icon, label, status, color }) => (
-  <div style={itemStyle}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <Icon size={14} weight="fill" color={color} />
-      <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{label}</span>
-    </div>
-    <span style={{ fontSize: '0.7rem', color, fontWeight: 800, textTransform: 'uppercase' }}>{status}</span>
-  </div>
+const StatusDot = ({ color }) => (
+  <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
 );
 
 const DebugPanel = () => {
@@ -90,10 +81,11 @@ const DebugPanel = () => {
     const fetchHealth = async () => {
       try {
         const apiHost = window.location.hostname;
-        const res = await axios.get(`http://${apiHost}:5000/api/public/health`);
-        setHealth(res.data);
+        const res = await fetch(`http://${apiHost}:5000/api/public/health`);
+        const data = await res.json();
+        setHealth(data);
       } catch (err) {
-        console.error('Health check failed');
+        console.warn('Health check unreachable');
       }
     };
 
@@ -104,42 +96,52 @@ const DebugPanel = () => {
 
   if (!showDebug) return null;
 
-  const getStatusColor = (status) => status === 'connected' || status === 'active' ? '#4caf50' : '#e53935';
+  const getColor = (s) => (s === 'connected' || s === 'active' ? '#4caf50' : '#f44336');
 
   return (
     <div style={panelWrapper}>
       <div style={header} onClick={() => setMinimized(!minimized)}>
-        <Activity size={18} weight="bold" color="#e53935" />
-        <span style={title}>SYSTEM HEALTH</span>
-        {minimized ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f44336', animation: 'pulse 1.5s infinite' }} />
+        <span style={title}>SYSTEM TELEMETRY</span>
+        <span style={{ fontSize: '10px' }}>{minimized ? '▲' : '▼'}</span>
       </div>
 
       {!minimized && (
         <div style={content}>
-          <HealthItem 
-            icon={Database} 
-            label="MongoDB" 
-            status={health?.services?.mongodb || 'checking...'} 
-            color={getStatusColor(health?.services?.mongodb)}
-          />
-          <HealthItem 
-            icon={HardDrive} 
-            label="Redis" 
-            status={health?.services?.redis || 'checking...'} 
-            color={getStatusColor(health?.services?.redis)}
-          />
-          <HealthItem 
-            icon={ShieldCheck} 
-            label="Supabase" 
-            status={health?.services?.supabase || 'checking...'} 
-            color={getStatusColor(health?.services?.supabase)}
-          />
+          <div style={itemStyle}>
+            <span style={{ fontSize: '12px' }}>MongoDB</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: '10px', color: getColor(health?.services?.mongodb) }}>{health?.services?.mongodb || '...'}</span>
+              <StatusDot color={getColor(health?.services?.mongodb)} />
+            </div>
+          </div>
+          <div style={itemStyle}>
+            <span style={{ fontSize: '12px' }}>Redis</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: '10px', color: getColor(health?.services?.redis) }}>{health?.services?.redis || '...'}</span>
+              <StatusDot color={getColor(health?.services?.redis)} />
+            </div>
+          </div>
+          <div style={itemStyle}>
+            <span style={{ fontSize: '12px' }}>Supabase</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: '10px', color: getColor(health?.services?.supabase) }}>{health?.services?.supabase || '...'}</span>
+              <StatusDot color={getColor(health?.services?.supabase)} />
+            </div>
+          </div>
           <div style={footer}>
-            <span>Env: {health?.env || '...'}</span>
-            <span>API: {window.location.hostname}:5000</span>
+            <span>{health?.env || 'dev'}</span>
+            <span>{window.location.hostname}</span>
           </div>
         </div>
       )}
+      <style>{`
+        @keyframes pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.4; }
+          100% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };
