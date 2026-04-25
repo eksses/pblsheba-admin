@@ -4,20 +4,20 @@ const panelWrapper = {
   position: 'fixed',
   bottom: '20px',
   right: '20px',
-  width: '240px',
+  width: '260px',
   background: 'rgba(0, 0, 0, 0.95)',
-  backdropFilter: 'blur(10px)',
+  backdropFilter: 'blur(12px)',
   border: '1px solid #333',
-  borderRadius: '12px',
+  borderRadius: '14px',
   color: '#fff',
   zIndex: 9999,
   fontFamily: 'sans-serif',
   overflow: 'hidden',
-  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+  boxShadow: '0 10px 40px rgba(0,0,0,0.6)'
 };
 
 const header = {
-  padding: '10px 15px',
+  padding: '12px 15px',
   background: '#111',
   display: 'flex',
   alignItems: 'center',
@@ -28,37 +28,82 @@ const header = {
 
 const title = {
   fontSize: '11px',
-  fontWeight: 'bold',
-  letterSpacing: '1px',
-  flex: 1
+  fontWeight: '900',
+  letterSpacing: '1.5px',
+  flex: 1,
+  color: '#aaa'
 };
 
 const content = {
   padding: '15px',
   display: 'flex',
   flexDirection: 'column',
-  gap: 10
+  gap: 12
 };
 
 const itemStyle = {
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center'
+  alignItems: 'center',
+  position: 'relative'
 };
 
 const footer = {
-  marginTop: '10px',
+  marginTop: '8px',
   paddingTop: '10px',
   borderTop: '1px solid #222',
   display: 'flex',
-  justifyContent: 'space-between',
-  fontSize: '10px',
-  color: '#666'
+  flexDirection: 'column',
+  gap: 4,
+  fontSize: '9px',
+  color: '#555'
 };
 
 const StatusDot = ({ color }) => (
-  <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 5px ${color}` }} />
+  <div style={{ 
+    width: 8, 
+    height: 8, 
+    borderRadius: '50%', 
+    background: color, 
+    boxShadow: `0 0 8px ${color}`,
+    transition: 'all 0.3s ease'
+  }} />
 );
+
+const DiagnosticItem = ({ label, service, apiError }) => {
+  const [hover, setHover] = useState(false);
+  const status = service?.status || (apiError ? 'offline' : '...');
+  
+  const getColor = (s) => {
+    if (apiError) return '#666';
+    if (s === 'connected' || s === 'active' || s === 'up') return '#4caf50';
+    if (s === 'connecting') return '#ff9800';
+    return '#f44336';
+  };
+
+  return (
+    <div 
+      style={itemStyle} 
+      onMouseEnter={() => setHover(true)} 
+      onMouseLeave={() => setHover(false)}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#ccc' }}>{label}</span>
+        {hover && service?.host && (
+          <span style={{ fontSize: '8px', color: '#666', position: 'absolute', top: '-12px', left: 0, background: '#000', padding: '2px 4px', borderRadius: '4px', zIndex: 10 }}>
+            {service.host}
+          </span>
+        )}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: '10px', fontWeight: '900', color: getColor(status), textTransform: 'uppercase' }}>
+          {status}
+        </span>
+        <StatusDot color={getColor(status)} />
+      </div>
+    </div>
+  );
+};
 
 const DebugPanel = () => {
   const [health, setHealth] = useState(null);
@@ -102,11 +147,6 @@ const DebugPanel = () => {
 
   if (!showDebug) return null;
 
-  const getColor = (s) => {
-    if (apiError) return '#666'; // Grey if API is unreachable
-    return (s === 'connected' || s === 'active' ? '#4caf50' : '#f44336');
-  };
-
   return (
     <div style={panelWrapper}>
       <div style={header} onClick={() => setMinimized(!minimized)}>
@@ -114,62 +154,42 @@ const DebugPanel = () => {
           width: 10, 
           height: 10, 
           borderRadius: '50%', 
-          background: apiError ? '#666' : '#f44336', 
-          animation: apiError ? 'none' : 'pulse 1.5s infinite' 
+          background: apiError ? '#444' : '#00ff00', 
+          animation: apiError ? 'none' : 'pulse 2s infinite' 
         }} />
-        <span style={title}>SYSTEM TELEMETRY</span>
-        <span style={{ fontSize: '10px' }}>{minimized ? '▲' : '▼'}</span>
+        <span style={title}>PRO TELEMETRY</span>
+        <span style={{ fontSize: '10px', color: '#444' }}>{minimized ? '▲' : '▼'}</span>
       </div>
 
       {!minimized && (
         <div style={content}>
           {apiError && (
-            <div style={{ background: 'rgba(244, 67, 54, 0.2)', padding: '8px', borderRadius: '6px', marginBottom: '5px', textAlign: 'center' }}>
-              <span style={{ fontSize: '10px', color: '#f44336', fontWeight: 'bold' }}>API UNREACHABLE</span>
+            <div style={{ background: 'rgba(244, 67, 54, 0.1)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(244, 67, 54, 0.2)', textAlign: 'center' }}>
+              <span style={{ fontSize: '10px', color: '#f44336', fontWeight: 'bold' }}>API CONNECTION LOST</span>
             </div>
           )}
           
-          <div style={itemStyle}>
-            <span style={{ fontSize: '12px' }}>MongoDB</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: '10px', color: getColor(health?.services?.mongodb) }}>
-                {apiError ? 'unknown' : (health?.services?.mongodb || '...')}
-              </span>
-              <StatusDot color={getColor(health?.services?.mongodb)} />
-            </div>
-          </div>
-          
-          <div style={itemStyle}>
-            <span style={{ fontSize: '12px' }}>Redis</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: '10px', color: getColor(health?.services?.redis) }}>
-                {apiError ? 'unknown' : (health?.services?.redis || '...')}
-              </span>
-              <StatusDot color={getColor(health?.services?.redis)} />
-            </div>
-          </div>
-          
-          <div style={itemStyle}>
-            <span style={{ fontSize: '12px' }}>Supabase</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: '10px', color: getColor(health?.services?.supabase) }}>
-                {apiError ? 'unknown' : (health?.services?.supabase || '...')}
-              </span>
-              <StatusDot color={getColor(health?.services?.supabase)} />
-            </div>
-          </div>
+          <DiagnosticItem label="MONGODB" service={health?.services?.mongodb} apiError={apiError} />
+          <DiagnosticItem label="REDIS CACHE" service={health?.services?.redis} apiError={apiError} />
+          <DiagnosticItem label="SUPABASE" service={health?.services?.supabase} apiError={apiError} />
           
           <div style={footer}>
-            <span>{apiError ? 'OFFLINE' : (health?.env || 'dev')}</span>
-            <span style={{ fontSize: '9px', color: '#444' }}>{window.location.hostname}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Uptime: {health?.uptime ? `${Math.floor(health.uptime / 60)}m` : '...'}</span>
+              <span>Mem: {health?.memory?.rss ? `${Math.round(health.memory.rss / 1024 / 1024)}MB` : '...'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.5 }}>
+              <span>Env: {health?.environment || 'unknown'}</span>
+              <span>Node: {health?.version || '...'}</span>
+            </div>
           </div>
         </div>
       )}
       <style>{`
         @keyframes pulse {
-          0% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.1); }
-          100% { opacity: 1; transform: scale(1); }
+          0% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.4); }
+          50% { opacity: 0.6; transform: scale(1.1); box-shadow: 0 0 0 10px rgba(0, 255, 0, 0); }
+          100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
         }
       `}</style>
     </div>
