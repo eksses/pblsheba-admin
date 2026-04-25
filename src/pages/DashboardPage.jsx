@@ -62,13 +62,18 @@ const DashboardPage = () => {
     if (testPushLoading) return;
     setTestPushLoading(true);
     try {
-      await axiosClient.post('/notifications/test-push', {
+      const response = await axiosClient.post('/notifications/test-push', {
         title: 'Admin Test',
         body: 'Testing notifications from the Admin Dashboard.'
       });
-      setTimeout(() => setTestPushLoading(false), 2000);
+      
+      const { delivery } = response.data;
+      alert(`Server Response: Sent=${delivery.sent}, Failed=${delivery.failed}, Cleaned=${delivery.cleaned}`);
+      
+      setTimeout(() => setTestPushLoading(false), 1000);
     } catch (err) {
       console.error('Test push failed:', err);
+      alert('Test push failed: ' + (err.response?.data?.message || err.message));
       setTestPushLoading(false);
     }
   };
