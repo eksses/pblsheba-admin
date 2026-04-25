@@ -9,6 +9,9 @@ import {
 } from '@phosphor-icons/react';
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
+import "@magicbell/react/styles/webpush-button.css";
+import MagicBellProvider from "@magicbell/react/context-provider";
+import WebPushButton from "@magicbell/react/webpush-button";
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -16,58 +19,7 @@ const DashboardPage = () => {
   const [metrics, setMetrics] = useState(
     dashboardCache || { totalMembers: 0, totalEmployees: 0, pendingApprovals: 0, totalCollected: 0 }
   );
-  const [pushStatus, setPushStatus] = useState('idle');
-
-  const urlBase64ToUint8Array = (base64String) => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
-
-  const handleEnableNotifications = async (isSilent = false) => {
-    if (!isSilent) setPushStatus('requesting');
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const existing = await registration.pushManager.getSubscription();
-      if (existing) await existing.unsubscribe();
-
-      const publicKey = 'BGJBhJEhNlojxGRksjriJrIgH7-BCs0q4D7_rthm5AKP3tJnjBpU46mIiqZ87UNQSvcpuIlGb51ouqHrgvAOMY0';
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
-      });
-
-      if (subscription) {
-        await axiosClient.post('/notifications/subscribe', { subscription });
-        setPushStatus('subscribed');
-      }
-    } catch (err) {
-      if (!isSilent) {
-        console.error('Notification setup failed:', err);
-        setPushStatus('error');
-      }
-    }
-  };
-
-  useEffect(() => {
-    const initPush = () => {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        handleEnableNotifications(true);
-      }
-    };
-
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      initPush();
-    } else {
-      window.addEventListener('sw-ready', initPush);
-    }
-    return () => window.removeEventListener('sw-ready', initPush);
-  }, []);
+  const magicBellToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2VtYWlsIjoic2hhbWlyYmh1aXlhbjJAZ21haWwuY29tIiwidXNlcl9leHRlcm5hbF9pZCI6bnVsbCwiYXBpX2tleSI6InBrX1RHNDFuM3I0OTF2ZDRGOUJPRzAxXzM2MzEwMjgyMDIiLCJpYXQiOjE3NzcxMDU0MDMsImV4cCI6MTc3NzE5MTgwM30.aX6fePvT8r1Pvzc-X3N3JVZruY0Bc8UlHjOx9N_Sqs8";
 
   useEffect(() => { 
     axiosClient.get('/admin/dashboard')
@@ -77,28 +29,6 @@ const DashboardPage = () => {
       })
       .catch(() => {}); 
   }, [setDashboardCache]);
-
-  const [testPushLoading, setTestPushLoading] = useState(false);
-
-  const handleTestPush = async () => {
-    if (testPushLoading) return;
-    setTestPushLoading(true);
-    try {
-      const response = await axiosClient.post('/notifications/test-push', {
-        title: 'Admin Test',
-        body: 'Testing notifications from the Admin Dashboard.'
-      });
-      
-      const { delivery } = response.data;
-      alert(`Server Response: Sent=${delivery.sent}, Failed=${delivery.failed}, Cleaned=${delivery.cleaned}`);
-      
-      setTimeout(() => setTestPushLoading(false), 1000);
-    } catch (err) {
-      console.error('Test push failed:', err);
-      alert('Test push failed: ' + (err.response?.data?.message || err.message));
-      setTestPushLoading(false);
-    }
-  };
 
   const showNotifBanner = 'Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied';
 
@@ -118,40 +48,33 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {showNotifBanner && (
-        <button
-          onClick={handleEnableNotifications}
-          disabled={pushStatus === 'requesting'}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            width: '100%', padding: '14px 18px', marginBottom: 20,
-            background: '#1a2e1a', border: '1px solid #2e7d32', borderRadius: 10,
-            color: '#a5d6a7', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600
-          }}
-        >
-          <BellRinging size={20} weight="fill" />
-          {pushStatus === 'requesting' ? 'Enabling...' : 'Enable Push Notifications'}
-        </button>
-      )}
-      
-      {Notification.permission === 'granted' && (
-        <button
-          onClick={handleTestPush}
-          disabled={testPushLoading}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            width: '100%', padding: '12px 18px', marginBottom: 20,
-            background: testPushLoading ? 'rgba(124, 58, 237, 0.05)' : 'rgba(124, 58, 237, 0.1)', 
-            border: '1px solid #7c3aed', borderRadius: 10,
-            color: '#a78bfa', cursor: testPushLoading ? 'not-allowed' : 'pointer', 
-            fontSize: '0.85rem', fontWeight: 600,
-            opacity: testPushLoading ? 0.6 : 1
-          }}
-        >
-          <BellRinging size={18} weight="fill" className={testPushLoading ? 'animate-pulse' : ''} />
-          {testPushLoading ? 'Sending Test Notification...' : 'Send Test Push Notification'}
-        </button>
-      )}
+      <MagicBellProvider token={magicBellToken}>
+        <div style={{ marginBottom: 20 }}>
+          <WebPushButton
+            className="magicbell-button"
+            renderLabel={({ status, error }) => (
+              <div style={{ 
+                display: 'flex', alignItems: 'center', gap: 10, 
+                width: '100%', padding: '14px 18px',
+                background: status === "success" ? 'rgba(46, 125, 50, 0.1)' : 'rgba(124, 58, 237, 0.1)', 
+                border: status === "success" ? '1px solid #2e7d32' : '1px solid #7c3aed', 
+                borderRadius: 10,
+                color: status === "success" ? '#a5d6a7' : '#a78bfa',
+                cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600
+              }}>
+                <BellRinging size={20} weight="fill" />
+                <span>
+                  {error 
+                    ? `Error: ${error}` 
+                    : status === "success" 
+                      ? "Push Notifications Active" 
+                      : "Enable Push Notifications"}
+                </span>
+              </div>
+            )}
+          />
+        </div>
+      </MagicBellProvider>
 
       <div className="metrics-grid">
         {cards.map(({ key, value, icon: Icon, cls }) => (
