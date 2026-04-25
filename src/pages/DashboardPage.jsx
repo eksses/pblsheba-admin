@@ -56,6 +56,17 @@ const DashboardPage = () => {
       .catch(() => {}); 
   }, [setDashboardCache]);
 
+  const handleTestPush = async () => {
+    try {
+      await axiosClient.post('/notifications/test-push', {
+        title: 'Admin Test',
+        body: 'Testing notifications from the Admin Dashboard.'
+      });
+    } catch (err) {
+      console.error('Test push failed:', err);
+    }
+  };
+
   const showNotifBanner = 'Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied';
 
   const cards = [
@@ -87,6 +98,21 @@ const DashboardPage = () => {
         >
           <BellRinging size={20} weight="fill" />
           {pushStatus === 'requesting' ? 'Enabling...' : 'Enable Push Notifications'}
+        </button>
+      )}
+      
+      {Notification.permission === 'granted' && (
+        <button
+          onClick={handleTestPush}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            width: '100%', padding: '12px 18px', marginBottom: 20,
+            background: 'rgba(124, 58, 237, 0.1)', border: '1px solid #7c3aed', borderRadius: 10,
+            color: '#a78bfa', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
+          }}
+        >
+          <BellRinging size={18} weight="fill" />
+          Send Test Push Notification
         </button>
       )}
 
