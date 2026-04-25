@@ -11,30 +11,29 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  console.log('Push received', event);
-  let data = {};
+  console.log('Push Event Triggered:', event);
+  
+  let title = 'PBL Sheba';
+  let body = 'You have a new update';
 
-  try {
-    data = event.data.json();
-  } catch (err) {
-    data = { 
-      title: 'PBL Sheba Update', 
-      message: event.data ? event.data.text() : 'New notification received' 
-    };
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      title = data.title || title;
+      body = data.message || data.body || body;
+    } catch (e) {
+      body = event.data.text();
+    }
   }
 
-  const options = {
-    body: data.message || data.body || 'You have a new update',
+  const promiseChain = self.registration.showNotification(title, {
+    body: body,
     icon: '/logo.png',
     badge: '/logo.png',
-    data: { url: data.url || '/' },
-    vibrate: [100, 50, 100],
-    requireInteraction: true
-  };
+    vibrate: [100, 50, 100]
+  });
 
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'PBL Sheba', options)
-  );
+  event.waitUntil(promiseChain);
 });
 
 self.addEventListener('notificationclick', (event) => {
