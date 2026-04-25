@@ -19,12 +19,12 @@ self.addEventListener('push', (event) => {
   } catch (err) {
     data = { 
       title: 'PBL Sheba Update', 
-      body: event.data ? event.data.text() : 'New notification received' 
+      message: event.data ? event.data.text() : 'New notification received' 
     };
   }
 
   const options = {
-    body: data.body || 'You have a new update',
+    body: data.message || data.body || 'You have a new update',
     icon: '/logo.png',
     badge: '/logo.png',
     data: { url: data.url || '/' },
