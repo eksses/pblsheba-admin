@@ -63,7 +63,7 @@ const HealthStats = () => {
         </div>
         <div className="health-item">
           <Cpu size={16} color="var(--primary)" weight="fill" />
-          <span>{Math.round(health.memory?.rss / 1024 / 1024)}MB RSS</span>
+          <span>{health.memory?.rss ? `${Math.round(health.memory.rss / 1024 / 1024)}MB RSS` : 'N/A'}</span>
         </div>
       </div>
     </div>

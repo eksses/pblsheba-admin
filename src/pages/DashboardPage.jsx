@@ -24,7 +24,13 @@ const DashboardPage = () => {
   const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
+    let rawData;
+    try {
+      rawData = window.atob(base64);
+    } catch (e) {
+      console.error('atob failed:', e);
+      return new Uint8Array(0);
+    }
     const outputArray = new Uint8Array(rawData.length);
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i);
@@ -59,7 +65,8 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const initPush = () => {
-      if ('Notification' in window && window.Notification?.permission === 'granted') {
+      const hasNotif = typeof window !== 'undefined' && 'Notification' in window;
+      if (hasNotif && window.Notification?.permission === 'granted') {
         handleEnableNotifications(true);
       }
     };
@@ -103,7 +110,9 @@ const DashboardPage = () => {
     }
   };
 
-  const showNotifBanner = 'Notification' in window && window.Notification?.permission !== 'granted' && window.Notification?.permission !== 'denied';
+  const hasNotif = typeof window !== 'undefined' && 'Notification' in window;
+  const showNotifBanner = hasNotif && window.Notification?.permission !== 'granted' && window.Notification?.permission !== 'denied';
+  const isNotifGranted = hasNotif && window.Notification?.permission === 'granted';
 
   const cards = [
     { key: 'total_members',    value: metrics.totalMembers,     icon: Users,              cls: 'green'  },
@@ -137,7 +146,7 @@ const DashboardPage = () => {
         </button>
       )}
       
-      {window.Notification?.permission === 'granted' && (
+      {isNotifGranted && (
         <button
           onClick={handleTestPush}
           disabled={testPushLoading}
@@ -196,7 +205,7 @@ const DashboardPage = () => {
         </div>
       )}
 
-      <HealthStats />
+      {metrics && <HealthStats />}
     </div>
   );
 };
