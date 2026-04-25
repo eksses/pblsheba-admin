@@ -531,6 +531,7 @@ h1, h2, h3, h4 {
   transition: all 0.15s ease;
   outline: none;
   -webkit-appearance: none;
+  appearance: none;
 }
 
 .form-input:focus {
