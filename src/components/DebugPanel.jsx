@@ -135,11 +135,11 @@ const DebugPanel = () => {
 
     const fetchHealth = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000/api`;
-        const baseApi = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
-        const healthUrl = baseApi.replace(/\/api$/, '') + '/api/public/health';
+        const apiUrl = import.meta.env.VITE_API_URL;
+        if (!apiUrl) return;
         
-        const res = await fetch(healthUrl);
+        const base = apiUrl.replace(/\/api\/?$/, '');
+        const res = await fetch(`${base}/api/public/health`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         setHealth(data);

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosClient from '../api/axiosClient';
 
 const VAPID_PUBLIC_KEY = 'BGJBhJEhNlojxGRksjriJrIgH7-BCs0q4D7_rthm5AKP3tJnjBpU46mIiqZ87UNQSvcpuIlGb51ouqHrgvAOMY0';
 
@@ -15,17 +15,23 @@ function urlBase64ToUint8Array(base64String) {
 
 export const subscribeAdminToPush = async () => {
   try {
-    if (!('serviceWorker' in navigator)) return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.warn('Push notifications not supported in this browser');
+      return false;
+    }
 
     const registration = await navigator.serviceWorker.register('/sw.js');
-    console.log('Admin SW Registered');
 
     const readyRegistration = await navigator.serviceWorker.ready;
 
-    const subscription = await readyRegistration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
+    let subscription = await readyRegistration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await readyRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
 
     const subObj = subscription.toJSON();
     const payload = {
@@ -38,18 +44,11 @@ export const subscribeAdminToPush = async () => {
       }
     };
 
-    const token = JSON.parse(localStorage.getItem('auth-storage'))?.state?.user?.token;
-
-    await axios.post(`http://${window.location.hostname}:5000/api/notifications/subscribe`, payload, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    console.log('Admin Push subscription saved');
+    await axiosClient.post('/notifications/subscribe', payload);
+    console.log('Admin push subscription saved');
     return true;
   } catch (error) {
-    console.error('Admin Push subscription failed:', error);
+    console.error('Admin push subscription failed:', error);
     return false;
   }
 };
