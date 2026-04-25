@@ -4,6 +4,8 @@ import { initReactI18next } from 'react-i18next';
 const resources = {
   en: {
     translation: {
+      "payment_logs": "Payment Logs",
+      "job_applications": "Job Applications",
       "debug": "debug",
       "Could not access camera. Please check permissions.": "Could not access camera. Please check permissions.",
       "2d": "2d",

@@ -177,15 +177,15 @@ const DashboardPage = () => {
           <div className="card-list">
             {(Array.isArray(metrics.staffPerformance) ? metrics.staffPerformance : []).slice(0, 3).map((item, index) => (
               <div className="data-card" key={item.id} style={{ padding: '14px 18px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div className="data-card-avatar" style={{ width: 36, height: 36, fontSize: '0.85rem' }}>{item.name[0]}</div>
-                    <div>
-                      <div className="data-card-name" style={{ fontSize: '0.9rem' }}>{item.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                    <div className="data-card-avatar" style={{ width: 36, height: 36, fontSize: '0.85rem', flexShrink: 0 }}>{item.name[0]}</div>
+                    <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                      <div className="data-card-name" style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{item.registrations} {t('total_registrations')}</div>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1rem' }}>{item.totalActivity}</div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('activity')}</div>
                   </div>

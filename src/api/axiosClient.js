@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || '/api',
+  baseURL: import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api'),
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
