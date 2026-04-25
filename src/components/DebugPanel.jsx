@@ -4,7 +4,7 @@ const panelWrapper = {
   position: 'fixed',
   bottom: '20px',
   right: '20px',
-  width: '220px',
+  width: '240px',
   background: 'rgba(0, 0, 0, 0.95)',
   backdropFilter: 'blur(10px)',
   border: '1px solid #333',
@@ -57,12 +57,13 @@ const footer = {
 };
 
 const StatusDot = ({ color }) => (
-  <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
+  <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 5px ${color}` }} />
 );
 
 const DebugPanel = () => {
   const [health, setHealth] = useState(null);
   const [minimized, setMinimized] = useState(true);
+  const [apiError, setApiError] = useState(false);
   const [forceShow, setForceShow] = useState(localStorage.getItem('pbl_debug_active') === 'true');
   const showDebug = import.meta.env.VITE_SHOW_DEBUG === 'true' || forceShow;
 
@@ -80,18 +81,17 @@ const DebugPanel = () => {
 
     const fetchHealth = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL;
-        if (!apiUrl) return;
-
-        // Cleanly construct the health check URL from environment
+        const apiUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000/api`;
         const baseApi = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
         const healthUrl = baseApi.replace(/\/api$/, '') + '/api/public/health';
         
         const res = await fetch(healthUrl);
+        if (!res.ok) throw new Error();
         const data = await res.json();
         setHealth(data);
+        setApiError(false);
       } catch (err) {
-        // Silently fail if API is not yet configured for HTTPS/Vercel
+        setApiError(true);
       }
     };
 
@@ -102,50 +102,74 @@ const DebugPanel = () => {
 
   if (!showDebug) return null;
 
-  const getColor = (s) => (s === 'connected' || s === 'active' ? '#4caf50' : '#f44336');
+  const getColor = (s) => {
+    if (apiError) return '#666'; // Grey if API is unreachable
+    return (s === 'connected' || s === 'active' ? '#4caf50' : '#f44336');
+  };
 
   return (
     <div style={panelWrapper}>
       <div style={header} onClick={() => setMinimized(!minimized)}>
-        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f44336', animation: 'pulse 1.5s infinite' }} />
+        <div style={{ 
+          width: 10, 
+          height: 10, 
+          borderRadius: '50%', 
+          background: apiError ? '#666' : '#f44336', 
+          animation: apiError ? 'none' : 'pulse 1.5s infinite' 
+        }} />
         <span style={title}>SYSTEM TELEMETRY</span>
         <span style={{ fontSize: '10px' }}>{minimized ? '▲' : '▼'}</span>
       </div>
 
       {!minimized && (
         <div style={content}>
+          {apiError && (
+            <div style={{ background: 'rgba(244, 67, 54, 0.2)', padding: '8px', borderRadius: '6px', marginBottom: '5px', textAlign: 'center' }}>
+              <span style={{ fontSize: '10px', color: '#f44336', fontWeight: 'bold' }}>API UNREACHABLE</span>
+            </div>
+          )}
+          
           <div style={itemStyle}>
             <span style={{ fontSize: '12px' }}>MongoDB</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: '10px', color: getColor(health?.services?.mongodb) }}>{health?.services?.mongodb || '...'}</span>
+              <span style={{ fontSize: '10px', color: getColor(health?.services?.mongodb) }}>
+                {apiError ? 'unknown' : (health?.services?.mongodb || '...')}
+              </span>
               <StatusDot color={getColor(health?.services?.mongodb)} />
             </div>
           </div>
+          
           <div style={itemStyle}>
             <span style={{ fontSize: '12px' }}>Redis</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: '10px', color: getColor(health?.services?.redis) }}>{health?.services?.redis || '...'}</span>
+              <span style={{ fontSize: '10px', color: getColor(health?.services?.redis) }}>
+                {apiError ? 'unknown' : (health?.services?.redis || '...')}
+              </span>
               <StatusDot color={getColor(health?.services?.redis)} />
             </div>
           </div>
+          
           <div style={itemStyle}>
             <span style={{ fontSize: '12px' }}>Supabase</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: '10px', color: getColor(health?.services?.supabase) }}>{health?.services?.supabase || '...'}</span>
+              <span style={{ fontSize: '10px', color: getColor(health?.services?.supabase) }}>
+                {apiError ? 'unknown' : (health?.services?.supabase || '...')}
+              </span>
               <StatusDot color={getColor(health?.services?.supabase)} />
             </div>
           </div>
+          
           <div style={footer}>
-            <span>{health?.env || 'dev'}</span>
-            <span>API Active</span>
+            <span>{apiError ? 'OFFLINE' : (health?.env || 'dev')}</span>
+            <span style={{ fontSize: '9px', color: '#444' }}>{window.location.hostname}</span>
           </div>
         </div>
       )}
       <style>{`
         @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.4; }
-          100% { opacity: 1; }
+          0% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.1); }
+          100% { opacity: 1; transform: scale(1); }
         }
       `}</style>
     </div>
