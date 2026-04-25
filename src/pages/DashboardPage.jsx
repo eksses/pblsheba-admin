@@ -4,11 +4,12 @@ import {
   Users, 
   IdentificationCard, 
   WarningCircle, 
-  Money 
+  Money,
+  BellRinging
 } from '@phosphor-icons/react';
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
-import { requestAdminNotificationPermission } from '../utils/push';
+import { subscribeAdminToPush } from '../utils/push';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -16,10 +17,12 @@ const DashboardPage = () => {
   const [metrics, setMetrics] = useState(
     dashboardCache || { totalMembers: 0, totalEmployees: 0, pendingApprovals: 0, totalCollected: 0 }
   );
-  
+  const [pushStatus, setPushStatus] = useState('idle');
+
   useEffect(() => {
-    // Request admin notifications
-    requestAdminNotificationPermission();
+    if ('Notification' in window && Notification.permission === 'granted') {
+      subscribeAdminToPush().then(() => setPushStatus('subscribed'));
+    }
   }, []);
   
   useEffect(() => { 
@@ -30,6 +33,24 @@ const DashboardPage = () => {
       })
       .catch(() => {}); 
   }, [setDashboardCache]);
+
+  const handleEnableNotifications = async () => {
+    setPushStatus('requesting');
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        await subscribeAdminToPush();
+        setPushStatus('subscribed');
+      } else {
+        setPushStatus('denied');
+      }
+    } catch (err) {
+      console.error('Notification setup failed:', err);
+      setPushStatus('error');
+    }
+  };
+
+  const showNotifBanner = 'Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied';
 
   const cards = [
     { key: 'total_members',    value: metrics.totalMembers,     icon: Users,              cls: 'green'  },
@@ -46,6 +67,22 @@ const DashboardPage = () => {
           <p className="text-muted">{t('platform_overview')}</p>
         </div>
       </div>
+
+      {showNotifBanner && (
+        <button
+          onClick={handleEnableNotifications}
+          disabled={pushStatus === 'requesting'}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            width: '100%', padding: '14px 18px', marginBottom: 20,
+            background: '#1a2e1a', border: '1px solid #2e7d32', borderRadius: 10,
+            color: '#a5d6a7', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600
+          }}
+        >
+          <BellRinging size={20} weight="fill" />
+          {pushStatus === 'requesting' ? 'Enabling...' : 'Enable Push Notifications'}
+        </button>
+      )}
 
       <div className="metrics-grid">
         {cards.map(({ key, value, icon: Icon, cls }) => (
