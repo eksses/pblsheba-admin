@@ -22,6 +22,7 @@ const MembersPage = () => {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   
   // Modals & Action State
   const [addOpen, setAddOpen] = useState(false);
@@ -60,6 +61,7 @@ const MembersPage = () => {
 
   const filteredList = list.filter(m => {
     if (staffId && m.referredById !== staffId) return false;
+    if (statusFilter !== 'all' && m.status !== statusFilter) return false;
     if (searchTerm) {
       const str = `${m.name} ${m.nid} ${m.phone} ${m.fatherName}`.toLowerCase();
       return str.includes(searchTerm.toLowerCase());
@@ -166,6 +168,18 @@ const MembersPage = () => {
               onChange={e => setSearchTerm(e.target.value)} 
               style={{ width: '100%' }}
             />
+          </div>
+
+          <div className="filter-chips">
+            {['all', 'pending', 'approved', 'rejected'].map(s => (
+              <div 
+                key={s} 
+                className={`chip ${statusFilter === s ? 'active' : ''}`}
+                onClick={() => setStatusFilter(s)}
+              >
+                {t(s) || s.toUpperCase()}
+              </div>
+            ))}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>

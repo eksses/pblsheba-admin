@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/react';
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
+import HealthStats from '../features/system/HealthStats';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -194,6 +195,8 @@ const DashboardPage = () => {
           </div>
         </div>
       )}
+
+      <HealthStats />
     </div>
   );
 };
