@@ -40,3 +40,9 @@ yarn-error.log*
 .idea/
 *.swp
 *.swo
+
+*.log
+
+*.log
+logs/
+log/

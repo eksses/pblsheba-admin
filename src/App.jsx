@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { ToastProvider } from './context/ToastContext';
 import AppRoutes from './routes/AppRoutes';
+import DebugPanel from './components/DebugPanel';
 import './i18n';
 import './index.css';
 
@@ -16,6 +17,7 @@ function App() {
     <Router>
       <ToastProvider>
         <AppRoutes />
+        <DebugPanel />
       </ToastProvider>
     </Router>
   );
