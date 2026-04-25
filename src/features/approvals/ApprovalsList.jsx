@@ -71,7 +71,7 @@ const ApprovalsList = () => {
         </div>
       ) : (
         <div className="card-list">
-          {list.map(u => (
+          {Array.isArray(list) && list.map(u => (
             <div className="data-card" key={u._id}>
               <div className="data-card-row">
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center', flex: 1, minWidth: 0 }}>

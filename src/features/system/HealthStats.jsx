@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Database, HardDrive, Cpu, ShieldCheck } from '@phosphor-icons/react';
+import { Pulse, Database, HardDrive, Cpu, ShieldCheck } from '@phosphor-icons/react';
 import axiosClient from '../../api/axiosClient';
 
 const HealthStats = () => {
@@ -25,7 +25,7 @@ const HealthStats = () => {
   if (error) {
     return (
       <div className="health-card error">
-        <Activity size={20} weight="bold" />
+        <Pulse size={20} weight="bold" />
         <div className="health-content">
           <p className="health-label">System Health</p>
           <p className="health-value">Connectivity Lost</p>
@@ -54,7 +54,7 @@ const HealthStats = () => {
           <span>MongoDB</span>
         </div>
         <div className="health-item">
-          <Activity size={16} color={getStatusColor(health.services?.redis?.status)} weight="fill" />
+          <Pulse size={16} color={getStatusColor(health.services?.redis?.status)} weight="fill" />
           <span>Redis</span>
         </div>
         <div className="health-item">

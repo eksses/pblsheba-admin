@@ -31,6 +31,38 @@ const MemberEditForm = ({ form, onFieldChange }) => {
 
       <div className="m-grid m-grid-2">
         <div className="form-group">
+          <label className="form-label">{t('email')}</label>
+          <input 
+            type="email" 
+            className="form-input" 
+            value={form.email || ''} 
+            onChange={e => onFieldChange('email', e.target.value)} 
+          />
+        </div>
+        <div className="form-group">
+          <label className="form-label">{t('dob')} *</label>
+          <input 
+            type="date" 
+            className="form-input" 
+            value={form.dob ? form.dob.split('T')[0] : ''} 
+            onChange={e => onFieldChange('dob', e.target.value)} 
+            required
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">{t('address')}</label>
+        <textarea 
+          className="form-input" 
+          rows={2}
+          value={form.address || ''} 
+          onChange={e => onFieldChange('address', e.target.value)} 
+        />
+      </div>
+
+      <div className="m-grid m-grid-2">
+        <div className="form-group">
           <label className="form-label">{t('phone')} *</label>
           <input 
             type="tel" 

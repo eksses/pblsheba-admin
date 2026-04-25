@@ -175,7 +175,7 @@ const DashboardPage = () => {
             <button className="btn btn-ghost btn-sm" onClick={() => navigate('/leaderboard')}>{t('view_all')}</button>
           </div>
           <div className="card-list">
-            {metrics.staffPerformance.slice(0, 3).map((item, index) => (
+            {(Array.isArray(metrics.staffPerformance) ? metrics.staffPerformance : []).slice(0, 3).map((item, index) => (
               <div className="data-card" key={item.id} style={{ padding: '14px 18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

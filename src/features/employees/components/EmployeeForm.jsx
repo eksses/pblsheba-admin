@@ -48,14 +48,26 @@ const EmployeeForm = ({ form, onFieldChange, isEdit }) => {
         </div>
       </div>
 
-      <div className="form-group">
-        <label className="form-label">{t('email')}</label>
-        <input 
-          className="form-input" 
-          type="email" 
-          value={form.email} 
-          onChange={e => onFieldChange('email', e.target.value)} 
-        />
+      <div className="m-grid m-grid-2">
+        <div className="form-group">
+          <label className="form-label">{t('email')}</label>
+          <input 
+            className="form-input" 
+            type="email" 
+            value={form.email} 
+            onChange={e => onFieldChange('email', e.target.value)} 
+          />
+        </div>
+        <div className="form-group">
+          <label className="form-label">{t('dob')} *</label>
+          <input 
+            className="form-input" 
+            type="date" 
+            value={form.dob} 
+            onChange={e => onFieldChange('dob', e.target.value)} 
+            required
+          />
+        </div>
       </div>
 
       <div className="form-group">

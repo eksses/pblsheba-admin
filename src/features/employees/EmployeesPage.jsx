@@ -32,7 +32,7 @@ const EmployeesPage = () => {
 
   const emptyForm = { 
     name: '', phone: '', password: '', nid: '', email: '', 
-    fatherName: '', address: '', image: null, currentImageUrl: null 
+    fatherName: '', address: '', dob: '', image: null, currentImageUrl: null 
   };
   const [form, setForm] = useState(emptyForm);
 
@@ -83,6 +83,7 @@ const EmployeesPage = () => {
       email: emp.email || '',
       fatherName: emp.fatherName || '',
       address: emp.address || '',
+      dob: emp.dob ? emp.dob.split('T')[0] : '',
       image: null,
       currentImageUrl: emp.imageUrl || null
     });
@@ -208,7 +209,7 @@ const EmployeesPage = () => {
         </div>
       ) : (
         <div className="card-list">
-          {list.map(e => (
+          {Array.isArray(list) && list.map(e => (
             <EmployeeCard 
               key={e._id || e.id}
               employee={e}

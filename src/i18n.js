@@ -62,6 +62,7 @@ const resources = {
       "no_staff": "No staff yet.",
       "email": "Email",
       "address": "Address",
+      "dob": "Date of Birth",
       "temp_password": "Temporary Password",
       "temp_password_hint": "Employee must change password on first login.",
       "create_employee": "Create Employee",
@@ -264,7 +265,23 @@ const resources = {
       "total_surveys": "Surveys",
       "activity": "Activity",
       "no_activity": "No activity yet.",
-      "view_all": "View All"
+      "view_all": "View All",
+      "notification_center": "Notification Center",
+      "active_subscriptions": "Active Subscriptions",
+      "send_broadcast": "Send Broadcast",
+      "target_role": "Target Role",
+      "select_role": "Select Role",
+      "all_users": "All Users",
+      "send_now": "Send Now",
+      "active_devices": "Active Devices",
+      "no_subscriptions": "No active device subscriptions found",
+      "payment_logs_title": "Payment SMS Logs",
+      "unprocessed_sms_desc": "Recent unprocessed transaction messages from automated systems",
+      "no_unprocessed_sms": "No unprocessed payment SMS found",
+      "sender": "Sender",
+      "transaction_id": "TrxID",
+      "amount": "Amount",
+      "date": "Date"
     }
   },
   bn: {
@@ -327,6 +344,7 @@ const resources = {
       "no_staff": "এখনও কোনো কর্মী নেই।",
       "email": "ইমেইল",
       "address": "ঠিকানা",
+      "dob": "জন্ম তারিখ",
       "temp_password": "অস্থায়ী পাসওয়ার্ড",
       "temp_password_hint": "কর্মীকে প্রথম লগইনে পাসওয়ার্ড পরিবর্তন করতে হবে।",
       "create_employee": "কর্মী তৈরি করুন",
@@ -529,7 +547,23 @@ const resources = {
       "total_surveys": "জরিপ",
       "activity": "কার্যকলাপ",
       "no_activity": "এখনও কোনো কার্যকলাপ নেই।",
-      "view_all": "সব দেখুন"
+      "view_all": "সব দেখুন",
+      "notification_center": "নোটিফিকেশন সেন্টার",
+      "active_subscriptions": "সক্রিয় ডিভাইসসমূহ",
+      "send_broadcast": "ব্রডকাস্ট পাঠান",
+      "target_role": "টার্গেট রোল",
+      "select_role": "রোল নির্বাচন করুন",
+      "all_users": "সকল ব্যবহারকারী",
+      "send_now": "এখন পাঠান",
+      "active_devices": "সক্রিয় ডিভাইস",
+      "no_subscriptions": "কোনো সক্রিয় ডিভাইস পাওয়া যায়নি",
+      "payment_logs_title": "পেমেন্ট এসএমএস লগ",
+      "unprocessed_sms_desc": "অটোমেটেড সিস্টেম থেকে আসা সাম্প্রতিক পেমেন্ট মেসেজসমূহ",
+      "no_unprocessed_sms": "কোনো পেমেন্ট এসএমএস পাওয়া যায়নি",
+      "sender": "প্রেরক",
+      "transaction_id": "লেনদেন আইডি",
+      "amount": "পরিমাণ",
+      "date": "তারিখ"
     }
   }
 };

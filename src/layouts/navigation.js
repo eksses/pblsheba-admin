@@ -7,7 +7,9 @@ import {
   Trophy,
   Briefcase,
   HandHeart,
-  ClipboardText
+  ClipboardText,
+  Megaphone,
+  Receipt
 } from '@phosphor-icons/react';
 
 export const OWNER_PRIMARY = [
@@ -23,6 +25,8 @@ export const OWNER_MORE = [
   { to: '/career', icon: Briefcase, key: 'job_applications' },
   { to: '/settings', icon: Gear, key: 'settings' },
   { to: '/requests', icon: HandHeart, key: 'edit_requests' },
+  { to: '/notifications', icon: Megaphone, key: 'notification_center' },
+  { to: '/payment-logs', icon: Receipt, key: 'payment_logs' },
   { to: '/profile', icon: IdentificationCard, key: 'my_profile' },
 ];
 

@@ -23,6 +23,8 @@ const StaffProfilePage = lazy(() => import('../pages/StaffProfilePage'));
 const Login = lazy(() => import('../features/auth/Login'));
 const ForceReset = lazy(() => import('../features/auth/ForceReset'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
+const NotificationCenter = lazy(() => import('../features/system/NotificationCenter'));
+const PaymentLogs = lazy(() => import('../features/system/PaymentLogs'));
 
 const AdminLayout = ({ children }) => (
   <div className="admin-root">
@@ -82,6 +84,8 @@ const AppRoutes = () => {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/requests" element={<EditRequestsPage />} />
           <Route path="/profile" element={<StaffProfilePage />} />
+          <Route path="/notifications" element={<NotificationCenter />} />
+          <Route path="/payment-logs" element={<PaymentLogs />} />
           
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="*" element={<Navigate to="/404" replace />} />

@@ -59,7 +59,7 @@ const MembersPage = () => {
   const onFormChange = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const onEditFormChange = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
 
-  const filteredList = list.filter(m => {
+  const filteredList = (Array.isArray(list) ? list : []).filter(m => {
     if (staffId && m.referredById !== staffId) return false;
     if (statusFilter !== 'all' && m.status !== statusFilter) return false;
     if (searchTerm) {
