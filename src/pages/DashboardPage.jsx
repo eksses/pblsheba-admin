@@ -9,7 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
-import { subscribeAdminToPush } from '../utils/push';
+import { useSubscribe } from 'react-pwa-push-notifications';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -19,12 +19,34 @@ const DashboardPage = () => {
   );
   const [pushStatus, setPushStatus] = useState('idle');
 
+  const { getSubscription } = useSubscribe({ 
+    publicKey: 'BGJBhJEhNlojxGRksjriJrIgH7-BCs0q4D7_rthm5AKP3tJnjBpU46mIiqZ87UNQSvcpuIlGb51ouqHrgvAOMY0' 
+  });
+
+  const handleEnableNotifications = async (isSilent = false) => {
+    if (!isSilent) setPushStatus('requesting');
+    try {
+      const subscription = await getSubscription();
+      if (subscription) {
+        await axiosClient.post('/notifications/subscribe', { subscription });
+        setPushStatus('subscribed');
+      } else if (!isSilent) {
+        setPushStatus('error');
+      }
+    } catch (err) {
+      if (!isSilent) {
+        console.error('Notification setup failed:', err);
+        setPushStatus('error');
+      }
+    }
+  };
+
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'granted') {
-      subscribeAdminToPush().then(() => setPushStatus('subscribed'));
+      handleEnableNotifications(true);
     }
   }, []);
-  
+
   useEffect(() => { 
     axiosClient.get('/admin/dashboard')
       .then(r => {
@@ -33,22 +55,6 @@ const DashboardPage = () => {
       })
       .catch(() => {}); 
   }, [setDashboardCache]);
-
-  const handleEnableNotifications = async () => {
-    setPushStatus('requesting');
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        await subscribeAdminToPush();
-        setPushStatus('subscribed');
-      } else {
-        setPushStatus('denied');
-      }
-    } catch (err) {
-      console.error('Notification setup failed:', err);
-      setPushStatus('error');
-    }
-  };
 
   const showNotifBanner = 'Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied';
 
