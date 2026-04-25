@@ -18,13 +18,22 @@ createRoot(document.getElementById('root')).render(
 )
 
 // Register Service Worker for Push Notifications
-if ('serviceWorker' in navigator) {
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
       const reg = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
-      console.log('Service Worker registered successfully:', reg.scope);
-      await navigator.serviceWorker.ready;
-      window.dispatchEvent(new CustomEvent('sw-ready'));
+      if (reg) {
+        console.log('Service Worker registered successfully:', reg.scope);
+        // On some iOS versions, .ready can hang or fail
+        const readyReg = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('SW Ready Timeout')), 5000))
+        ]).catch(() => null);
+        
+        if (readyReg) {
+          window.dispatchEvent(new CustomEvent('sw-ready'));
+        }
+      }
     } catch (err) {
       console.error('Service Worker registration failed:', err);
     }
