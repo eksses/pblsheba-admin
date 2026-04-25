@@ -59,7 +59,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const initPush = () => {
-      if ('Notification' in window && Notification.permission === 'granted') {
+      if ('Notification' in window && window.Notification?.permission === 'granted') {
         handleEnableNotifications(true);
       }
     };
@@ -103,7 +103,7 @@ const DashboardPage = () => {
     }
   };
 
-  const showNotifBanner = 'Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied';
+  const showNotifBanner = 'Notification' in window && window.Notification?.permission !== 'granted' && window.Notification?.permission !== 'denied';
 
   const cards = [
     { key: 'total_members',    value: metrics.totalMembers,     icon: Users,              cls: 'green'  },
@@ -137,7 +137,7 @@ const DashboardPage = () => {
         </button>
       )}
       
-      {Notification.permission === 'granted' && (
+      {window.Notification?.permission === 'granted' && (
         <button
           onClick={handleTestPush}
           disabled={testPushLoading}
