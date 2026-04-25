@@ -9,7 +9,6 @@ import {
 } from '@phosphor-icons/react';
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
-import { useSubscribe } from 'react-pwa-push-notifications';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -19,9 +18,16 @@ const DashboardPage = () => {
   );
   const [pushStatus, setPushStatus] = useState('idle');
 
-  const { getSubscription } = useSubscribe({ 
-    publicKey: 'BGJBhJEhNlojxGRksjriJrIgH7-BCs0q4D7_rthm5AKP3tJnjBpU46mIiqZ87UNQSvcpuIlGb51ouqHrgvAOMY0' 
-  });
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
 
   const handleEnableNotifications = async (isSilent = false) => {
     if (!isSilent) setPushStatus('requesting');
@@ -30,12 +36,15 @@ const DashboardPage = () => {
       const existing = await registration.pushManager.getSubscription();
       if (existing) await existing.unsubscribe();
 
-      const subscription = await getSubscription();
+      const publicKey = 'BGJBhJEhNlojxGRksjriJrIgH7-BCs0q4D7_rthm5AKP3tJnjBpU46mIiqZ87UNQSvcpuIlGb51ouqHrgvAOMY0';
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      });
+
       if (subscription) {
         await axiosClient.post('/notifications/subscribe', { subscription });
         setPushStatus('subscribed');
-      } else if (!isSilent) {
-        setPushStatus('error');
       }
     } catch (err) {
       if (!isSilent) {
