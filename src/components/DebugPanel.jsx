@@ -1,6 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Database, HardDrive, ShieldCheck, X, ChevronDown, ChevronUp } from '@phosphor-icons/react';
+import { Activity, Database, HardDrive, ShieldCheck, ChevronDown, ChevronUp } from '@phosphor-icons/react';
+
+// Move styles to top for better build-tool compatibility
+const panelWrapper = {
+  position: 'fixed',
+  bottom: '20px',
+  right: '20px',
+  width: '220px',
+  background: 'rgba(0, 0, 0, 0.9)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid #333',
+  borderRadius: '12px',
+  color: '#fff',
+  zIndex: 9999,
+  fontFamily: '"Inter", sans-serif',
+  overflow: 'hidden',
+  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+};
+
+const header = {
+  padding: '10px 15px',
+  background: '#111',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+  cursor: 'pointer',
+  borderBottom: '1px solid #222'
+};
+
+const title = {
+  fontSize: '0.7rem',
+  fontWeight: 900,
+  letterSpacing: '1px',
+  flex: 1
+};
+
+const content = {
+  padding: '15px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10
+};
+
+const itemStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center'
+};
+
+const footer = {
+  marginTop: '10px',
+  paddingTop: '10px',
+  borderTop: '1px solid #222',
+  display: 'flex',
+  justifyContent: 'space-between',
+  fontSize: '0.6rem',
+  color: '#666'
+};
+
+const HealthItem = ({ icon: Icon, label, status, color }) => (
+  <div style={itemStyle}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <Icon size={14} weight="fill" color={color} />
+      <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{label}</span>
+    </div>
+    <span style={{ fontSize: '0.7rem', color, fontWeight: 800, textTransform: 'uppercase' }}>{status}</span>
+  </div>
+);
 
 const DebugPanel = () => {
   const [health, setHealth] = useState(null);
@@ -9,7 +76,6 @@ const DebugPanel = () => {
   const showDebug = import.meta.env.VITE_SHOW_DEBUG === 'true' || forceShow;
 
   useEffect(() => {
-    // Secret Trigger: Check URL for ?debug=true or ?debug=false
     const params = new URLSearchParams(window.location.search);
     if (params.get('debug') === 'true') {
       localStorage.setItem('pbl_debug_active', 'true');
@@ -76,72 +142,6 @@ const DebugPanel = () => {
       )}
     </div>
   );
-};
-
-const HealthItem = ({ icon: Icon, label, status, color }) => (
-  <div style={itemStyle}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <Icon size={14} weight="fill" color={color} />
-      <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{label}</span>
-    </div>
-    <span style={{ fontSize: '0.7rem', color, fontWeight: 800, textTransform: 'uppercase' }}>{status}</span>
-  </div>
-);
-
-const panelWrapper = {
-  position: 'fixed',
-  bottom: '20px',
-  right: '20px',
-  width: '220px',
-  background: 'rgba(0, 0, 0, 0.9)',
-  backdropFilter: 'blur(10px)',
-  border: '1px solid #333',
-  borderRadius: '12px',
-  color: '#fff',
-  zIndex: 9999,
-  fontFamily: '"Inter", sans-serif',
-  overflow: 'hidden',
-  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-};
-
-const header = {
-  padding: '10px 15px',
-  background: '#111',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 10,
-  cursor: 'pointer',
-  borderBottom: '1px solid #222'
-};
-
-const title = {
-  fontSize: '0.7rem',
-  fontWeight: 900,
-  letterSpacing: '1px',
-  flex: 1
-};
-
-const content = {
-  padding: '15px',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 10
-};
-
-const itemStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center'
-};
-
-const footer = {
-  marginTop: '10px',
-  paddingTop: '10px',
-  borderTop: '1px solid #222',
-  display: 'flex',
-  justifyContent: 'space-between',
-  fontSize: '0.6rem',
-  color: '#666'
 };
 
 export default DebugPanel;
