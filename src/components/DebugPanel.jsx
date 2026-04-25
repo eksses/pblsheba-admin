@@ -7,6 +7,7 @@ const panelWrapper = {
   width: '260px',
   background: 'rgba(0, 0, 0, 0.95)',
   backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
   border: '1px solid #333',
   borderRadius: '14px',
   color: '#fff',
@@ -118,17 +119,27 @@ const DebugPanel = () => {
   const [health, setHealth] = useState(null);
   const [minimized, setMinimized] = useState(true);
   const [apiError, setApiError] = useState(false);
-  const [forceShow, setForceShow] = useState(localStorage.getItem('pbl_debug_active') === 'true');
+  const [forceShow, setForceShow] = useState(() => {
+    try {
+      return localStorage.getItem('pbl_debug_active') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
   const showDebug = import.meta.env.VITE_SHOW_DEBUG === 'true' || forceShow;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('debug') === 'true') {
-      localStorage.setItem('pbl_debug_active', 'true');
-      setForceShow(true);
-    } else if (params.get('debug') === 'false') {
-      localStorage.setItem('pbl_debug_active', 'false');
-      setForceShow(false);
+    try {
+      if (params.get('debug') === 'true') {
+        localStorage.setItem('pbl_debug_active', 'true');
+        setForceShow(true);
+      } else if (params.get('debug') === 'false') {
+        localStorage.setItem('pbl_debug_active', 'false');
+        setForceShow(false);
+      }
+    } catch (e) {
+      console.warn('Storage access blocked:', e);
     }
 
     if (!showDebug) return;

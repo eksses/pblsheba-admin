@@ -618,7 +618,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: localStorage.getItem('pbl_lang') || 'en',
+    lng: (() => {
+      try {
+        return localStorage.getItem('pbl_lang') || 'en';
+      } catch (e) {
+        return 'en';
+      }
+    })(),
     fallbackLng: 'en',
     interpolation: { escapeValue: false }
   });
