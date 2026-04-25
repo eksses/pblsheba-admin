@@ -56,14 +56,20 @@ const DashboardPage = () => {
       .catch(() => {}); 
   }, [setDashboardCache]);
 
+  const [testPushLoading, setTestPushLoading] = useState(false);
+
   const handleTestPush = async () => {
+    if (testPushLoading) return;
+    setTestPushLoading(true);
     try {
       await axiosClient.post('/notifications/test-push', {
         title: 'Admin Test',
         body: 'Testing notifications from the Admin Dashboard.'
       });
+      setTimeout(() => setTestPushLoading(false), 2000);
     } catch (err) {
       console.error('Test push failed:', err);
+      setTestPushLoading(false);
     }
   };
 
@@ -104,15 +110,19 @@ const DashboardPage = () => {
       {Notification.permission === 'granted' && (
         <button
           onClick={handleTestPush}
+          disabled={testPushLoading}
           style={{
             display: 'flex', alignItems: 'center', gap: 10,
             width: '100%', padding: '12px 18px', marginBottom: 20,
-            background: 'rgba(124, 58, 237, 0.1)', border: '1px solid #7c3aed', borderRadius: 10,
-            color: '#a78bfa', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
+            background: testPushLoading ? 'rgba(124, 58, 237, 0.05)' : 'rgba(124, 58, 237, 0.1)', 
+            border: '1px solid #7c3aed', borderRadius: 10,
+            color: '#a78bfa', cursor: testPushLoading ? 'not-allowed' : 'pointer', 
+            fontSize: '0.85rem', fontWeight: 600,
+            opacity: testPushLoading ? 0.6 : 1
           }}
         >
-          <BellRinging size={18} weight="fill" />
-          Send Test Push Notification
+          <BellRinging size={18} weight="fill" className={testPushLoading ? 'animate-pulse' : ''} />
+          {testPushLoading ? 'Sending Test Notification...' : 'Send Test Push Notification'}
         </button>
       )}
 
