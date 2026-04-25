@@ -26,6 +26,10 @@ const DashboardPage = () => {
   const handleEnableNotifications = async (isSilent = false) => {
     if (!isSilent) setPushStatus('requesting');
     try {
+      const registration = await navigator.serviceWorker.ready;
+      const existing = await registration.pushManager.getSubscription();
+      if (existing) await existing.unsubscribe();
+
       const subscription = await getSubscription();
       if (subscription) {
         await axiosClient.post('/notifications/subscribe', { subscription });
