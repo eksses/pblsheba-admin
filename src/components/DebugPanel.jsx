@@ -80,25 +80,18 @@ const DebugPanel = () => {
 
     const fetchHealth = async () => {
       try {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        
-        // Use VITE_API_URL if available, otherwise fallback to local/IP logic
-        let apiUrl = import.meta.env.VITE_API_URL;
-        
-        if (!apiUrl) {
-          // Fallback logic for local network testing
-          apiUrl = `${protocol}//${hostname}:5000/api`;
-        }
-        
-        // Remove '/api' suffix for the health check endpoint if it exists
-        const healthUrl = apiUrl.replace(/\/api$/, '') + '/api/public/health';
+        const apiUrl = import.meta.env.VITE_API_URL;
+        if (!apiUrl) return;
+
+        // Cleanly construct the health check URL from environment
+        const baseApi = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+        const healthUrl = baseApi.replace(/\/api$/, '') + '/api/public/health';
         
         const res = await fetch(healthUrl);
         const data = await res.json();
         setHealth(data);
       } catch (err) {
-        console.warn('Health check unreachable');
+        // Silently fail if API is not yet configured for HTTPS/Vercel
       }
     };
 
@@ -144,7 +137,7 @@ const DebugPanel = () => {
           </div>
           <div style={footer}>
             <span>{health?.env || 'dev'}</span>
-            <span>{window.location.hostname}</span>
+            <span>API Active</span>
           </div>
         </div>
       )}
