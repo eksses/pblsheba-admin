@@ -72,7 +72,16 @@ const StatusDot = ({ color }) => (
 
 const DiagnosticItem = ({ label, service, apiError }) => {
   const [hover, setHover] = useState(false);
-  const status = service?.status || (apiError ? 'offline' : '...');
+  
+  // Type Guard: Ensure status is always a string for React rendering
+  let statusText = '...';
+  if (apiError) {
+    statusText = 'offline';
+  } else if (typeof service === 'string') {
+    statusText = service;
+  } else if (service && typeof service === 'object') {
+    statusText = service.status || 'unknown';
+  }
   
   const getColor = (s) => {
     if (apiError) return '#666';
@@ -96,10 +105,10 @@ const DiagnosticItem = ({ label, service, apiError }) => {
         )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: '10px', fontWeight: '900', color: getColor(status), textTransform: 'uppercase' }}>
-          {status}
+        <span style={{ fontSize: '10px', fontWeight: '900', color: getColor(statusText), textTransform: 'uppercase' }}>
+          {statusText}
         </span>
-        <StatusDot color={getColor(status)} />
+        <StatusDot color={getColor(statusText)} />
       </div>
     </div>
   );
