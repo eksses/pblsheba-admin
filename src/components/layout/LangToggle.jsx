@@ -6,7 +6,9 @@ const LangToggle = () => {
 
   const toggle = (l) => {
     i18n.changeLanguage(l);
-    localStorage.setItem('pbl_lang', l);
+    try {
+      localStorage.setItem('pbl_lang', l);
+    } catch (e) {}
     document.body.setAttribute('lang', l);
   };
 
