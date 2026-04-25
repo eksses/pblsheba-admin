@@ -2,11 +2,14 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pencil, Trash } from '@phosphor-icons/react';
 import Spinner from '../../../components/ui/Spinner';
+import { useAuthStore } from '../../../store/useAuthStore';
 
 const MemberCard = ({ member, onEdit, onDelete, actionId, t: tProp }) => {
   const { t: tHook } = useTranslation();
+  const { user } = useAuthStore();
   const t = tProp || tHook;
   const id = member._id || member.id;
+  const isOwner = user?.role === 'owner';
 
   return (
     <div className="data-card">
@@ -30,26 +33,29 @@ const MemberCard = ({ member, onEdit, onDelete, actionId, t: tProp }) => {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button 
-            className="btn btn-outline btn-icon btn-sm" 
-            onClick={() => onEdit(member)} 
-            title="Edit"
-          >
-            <Pencil size={16} weight="bold" />
-          </button>
-          <button 
-            className="btn btn-danger btn-icon btn-sm" 
-            onClick={() => onDelete(member)} 
-            title="Delete"
-          >
-            {actionId === id ? (
-              <Spinner size={16} />
-            ) : (
-              <Trash size={16} weight="bold" />
-            )}
-          </button>
-        </div>
+        
+        {isOwner && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              className="btn btn-outline btn-icon btn-sm" 
+              onClick={() => onEdit(member)} 
+              title="Edit"
+            >
+              <Pencil size={16} weight="bold" />
+            </button>
+            <button 
+              className="btn btn-danger btn-icon btn-sm" 
+              onClick={() => onDelete(member)} 
+              title="Delete"
+            >
+              {actionId === id ? (
+                <Spinner size={16} />
+              ) : (
+                <Trash size={16} weight="bold" />
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

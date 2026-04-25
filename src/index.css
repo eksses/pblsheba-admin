@@ -976,6 +976,20 @@ textarea.form-input {
   position: relative;
 }
 
+.skeleton-loader {
+  background: var(--neutral-100);
+  background-image: linear-gradient(90deg, var(--neutral-100) 0px, var(--neutral-200) 50%, var(--neutral-100) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite linear;
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+.shimmer { background: linear-gradient(90deg, var(--neutral-100) 25%, var(--neutral-200) 50%, var(--neutral-100) 75%); background-size: 200% 100%; animation: shimmer 1.3s ease infinite; border-radius: var(--radius-md); }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
 .login-hero {
   text-align: center;
   margin-bottom: 24px;

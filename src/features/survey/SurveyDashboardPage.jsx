@@ -4,13 +4,13 @@ import { FileArrowDown, ClipboardText } from '@phosphor-icons/react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-
 import axiosClient from '../../api/axiosClient';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToast } from '../../context/ToastContext';
 import Modal from '../../components/common/Modal';
 import SurveyCard from './components/SurveyCard';
 import SurveyDetails from './components/SurveyDetails';
+import Skeleton from '../../components/ui/Skeleton';
 
 const SurveyDashboardPage = () => {
   const { t } = useTranslation();
@@ -184,7 +184,11 @@ const SurveyDashboardPage = () => {
       )}
 
       {loading ? (
-        <div className="shimmer" style={{ height: 200, borderRadius: 'var(--radius-xl)' }} />
+        <div className="card-list">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} height="120px" borderRadius="16px" />
+          ))}
+        </div>
       ) : (
         <div className="card-list">
           {list.map(s => (
