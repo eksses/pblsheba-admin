@@ -4,6 +4,13 @@ import './i18n'
 import './index.css'
 import App from './App.jsx'
 
+if (import.meta.env.PROD && import.meta.env.VITE_ENABLE_LOGS !== 'true') {
+  console.log = () => {};
+  console.info = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

@@ -44,7 +44,7 @@ const MembersPage = () => {
     setLoading(true);
     try {
       const { data } = await axiosClient.get('/admin/members');
-      setList(data);
+      setList(Array.isArray(data) ? data : []);
     } catch (err) {
       toast.error(t('error_fetch'));
     } finally {

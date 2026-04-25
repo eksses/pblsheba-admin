@@ -23,7 +23,7 @@ const EditRequestsPage = () => {
     setLoading(true);
     try {
       const { data } = await axiosClient.get('/admin/edit-requests');
-      setList(data);
+      setList(Array.isArray(data) ? data : []);
     } catch {
       toast.error(t('error_fetch'));
     } finally {

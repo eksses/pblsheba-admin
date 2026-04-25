@@ -20,7 +20,7 @@ const PaymentLogs = () => {
     setLoading(true);
     try {
       const { data } = await axiosClient.get('/admin/payments/sms');
-      setList(data);
+      setList(Array.isArray(data) ? data : []);
     } catch (err) {
       toast.error(t('error_fetch_logs') || 'Failed to fetch payment logs');
     } finally {

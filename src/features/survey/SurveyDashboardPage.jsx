@@ -28,11 +28,11 @@ const SurveyDashboardPage = () => {
     setLoading(true);
     try {
       const { data } = await axiosClient.get(`/surveys?employeeId=${filter}`);
-      setList(data);
+      setList(Array.isArray(data) ? data : []);
       
       if (user.role === 'owner') {
         const { data: sData } = await axiosClient.get('/surveys/stats');
-        setStats(sData);
+        setStats(Array.isArray(sData) ? sData : []);
       }
     } catch {
       toast.error(t('error_fetch_data'));

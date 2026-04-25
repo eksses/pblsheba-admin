@@ -13,7 +13,7 @@ const LeaderboardPage = () => {
   useEffect(() => {
     setLoading(true);
     axiosClient.get('/admin/leaderboard')
-      .then(r => setBoard(r.data))
+      .then(r => setBoard(Array.isArray(r.data) ? r.data : []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
