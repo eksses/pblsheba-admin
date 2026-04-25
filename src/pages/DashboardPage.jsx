@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   Users, 
@@ -12,6 +13,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { dashboardCache, setDashboardCache } = useAuthStore();
   const [metrics, setMetrics] = useState(
     dashboardCache || { totalMembers: 0, totalEmployees: 0, pendingApprovals: 0, totalCollected: 0 }
@@ -165,7 +167,33 @@ const DashboardPage = () => {
         ))}
       </div>
       
-      {/* Additional dashboard content could go here */}
+      {metrics.staffPerformance?.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>{t('staff_performance')}</h3>
+            <button className="btn btn-ghost btn-sm" onClick={() => navigate('/leaderboard')}>{t('view_all')}</button>
+          </div>
+          <div className="card-list">
+            {metrics.staffPerformance.slice(0, 3).map((item, index) => (
+              <div className="data-card" key={item.id} style={{ padding: '14px 18px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div className="data-card-avatar" style={{ width: 36, height: 36, fontSize: '0.85rem' }}>{item.name[0]}</div>
+                    <div>
+                      <div className="data-card-name" style={{ fontSize: '0.9rem' }}>{item.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{item.registrations} {t('total_registrations')}</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1rem' }}>{item.totalActivity}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('activity')}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

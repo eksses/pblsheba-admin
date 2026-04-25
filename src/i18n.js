@@ -258,7 +258,13 @@ const resources = {
       "generating_id_card": "Generating ID Card...",
       "profile_desc": "View and update your profile information.",
       "profile_photo_instructions": "Upload a professional photo for your ID card.",
-      "download_id_card": "Download ID Card"
+      "download_id_card": "Download ID Card",
+      "staff_performance": "Staff Performance",
+      "total_registrations": "Registrations",
+      "total_surveys": "Surveys",
+      "activity": "Activity",
+      "no_activity": "No activity yet.",
+      "view_all": "View All"
     }
   },
   bn: {
@@ -517,7 +523,13 @@ const resources = {
       "generating_id_card": "আইডি কার্ড তৈরি হচ্ছে...",
       "profile_desc": "আপনার প্রোফাইল তথ্য দেখুন এবং আপডেট করুন।",
       "profile_photo_instructions": "আপনার আইডি কার্ডের জন্য একটি পেশাদার ছবি আপলোড করুন।",
-      "download_id_card": "আইডি কার্ড ডাউনলোড করুন"
+      "download_id_card": "আইডি কার্ড ডাউনলোড করুন",
+      "staff_performance": "স্টাফ পারফরম্যান্স",
+      "total_registrations": "নিবন্ধন",
+      "total_surveys": "জরিপ",
+      "activity": "কার্যকলাপ",
+      "no_activity": "এখনও কোনো কার্যকলাপ নেই।",
+      "view_all": "সব দেখুন"
     }
   }
 };

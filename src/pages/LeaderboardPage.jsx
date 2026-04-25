@@ -22,60 +22,72 @@ const LeaderboardPage = () => {
     <div className="fade-up">
       <div className="page-header">
         <div>
-          <h1>{t('rankings_title')}</h1>
-          <p className="text-muted">{t('rankings_desc')}</p>
+          <h1>{t('leaderboard')}</h1>
+          <p className="text-muted">{t('staff_performance')}</p>
         </div>
       </div>
 
       {loading ? (
-        <div className="shimmer" style={{ height: 400, borderRadius: 20 }} />
+        <div className="card-list">
+          {[1,2,3,4].map(i => <div key={i} className="shimmer" style={{ height: 100, borderRadius: 20 }} />)}
+        </div>
       ) : board.length === 0 ? (
         <div className="empty-state">
           <Trophy size={48} weight="duotone" />
-          <p>{t('no_data')}</p>
+          <p>{t('no_activity')}</p>
         </div>
       ) : (
         <div className="card-list">
           {board.map((item, index) => (
             <div 
               className="data-card" 
-              key={item._id || item.id} 
-              onClick={() => navigate(`/members?staffId=${item._id || item.id}`)}
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              key={item.id} 
+              onClick={() => navigate(`/members?staffId=${item.id}`)}
+              style={{ cursor: 'pointer' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div 
-                  className={`rank-badge ${index < 3 ? `rank-${index + 1}` : ''}`}
-                  style={{ 
-                    width: 32, 
-                    height: 32, 
-                    borderRadius: '50%', 
-                    background: index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : index === 2 ? '#b45309' : 'var(--grey-100)',
-                    color: index < 3 ? 'white' : 'var(--text-main)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  {index + 1}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div 
+                    className={`rank-badge ${index < 3 ? `rank-${index + 1}` : ''}`}
+                    style={{ 
+                      width: 32, 
+                      height: 32, 
+                      borderRadius: '50%', 
+                      background: index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : index === 2 ? '#b45309' : 'var(--neutral-100)',
+                      color: index < 3 ? 'white' : 'var(--text-body)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    {index + 1}
+                  </div>
+                  <div>
+                    <div className="data-card-name">{item.name}</div>
+                    <div className="data-card-sub">{item.phone}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="data-card-name">{item.name}</div>
-                  <div className="data-card-sub">{item.phone}</div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1.25rem', lineHeight: 1 }}>
+                    {item.totalActivity}
+                  </div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4 }}>
+                    {t('activity')}
+                  </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '1.1rem' }}>
-                    {item.count}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {t('members_referred')}
-                  </div>
+              
+              <div className="data-card-detail" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, background: 'var(--neutral-50)' }}>
+                <div style={{ padding: '8px 12px', borderRight: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>{t('total_registrations')}</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-heading)' }}>{item.registrations}</div>
                 </div>
-                <CaretRight size={20} weight="bold" color="var(--grey-400)" />
+                <div style={{ padding: '8px 12px' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>{t('total_surveys')}</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-heading)' }}>{item.surveys}</div>
+                </div>
               </div>
             </div>
           ))}
