@@ -16,25 +16,47 @@ function urlBase64ToUint8Array(base64String) {
 export const subscribeAdminToPush = async () => {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('Push notifications not supported in this browser');
+      console.warn('Push notifications not supported');
       return false;
     }
 
-    const registration = await navigator.serviceWorker.register('/sw.js');
-
-    const readyRegistration = await navigator.serviceWorker.ready;
-
-    let subscription = await readyRegistration.pushManager.getSubscription();
-
-    if (!subscription) {
-      subscription = await readyRegistration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
+    // Unregister ALL old service workers first to force fresh install
+    const existingRegistrations = await navigator.serviceWorker.getRegistrations();
+    for (const reg of existingRegistrations) {
+      await reg.unregister();
     }
 
+    // Register fresh SW with no cache
+    const registration = await navigator.serviceWorker.register('/sw.js', {
+      updateViaCache: 'none'
+    });
+
+    // Force the SW to activate immediately
+    if (registration.waiting) {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+
+    // Wait for the SW to be ready
+    const readyRegistration = await navigator.serviceWorker.ready;
+
+    // Force check for updates
+    await readyRegistration.update();
+
+    // Get or create subscription
+    let subscription = await readyRegistration.pushManager.getSubscription();
+
+    // Always re-subscribe to ensure fresh keys
+    if (subscription) {
+      await subscription.unsubscribe();
+    }
+    
+    subscription = await readyRegistration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+
     const subObj = subscription.toJSON();
-    const payload = {
+    await axiosClient.post('/notifications/subscribe', {
       subscription: {
         endpoint: subObj.endpoint,
         keys: {
@@ -42,9 +64,8 @@ export const subscribeAdminToPush = async () => {
           auth: subObj.keys.auth
         }
       }
-    };
+    });
 
-    await axiosClient.post('/notifications/subscribe', payload);
     console.log('Admin push subscription saved');
     return true;
   } catch (error) {
