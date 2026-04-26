@@ -16,10 +16,12 @@ import {
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
 import HealthStats from '../features/system/HealthStats';
+import { useDebugMode } from '../hooks/useDebugMode';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const isDebug = useDebugMode();
   const { dashboardCache, setDashboardCache } = useAuthStore();
   const [metrics, setMetrics] = useState(
     dashboardCache || { totalMembers: 0, totalEmployees: 0, pendingApprovals: 0, totalCollected: 0 }
@@ -325,7 +327,7 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {debugInfo && (
+      {isDebug && debugInfo && (
         <div className="data-card" style={{ marginBottom: 20, border: '1px dashed #444', background: '#0f172a' }}>
           <div className="data-card-header" style={{ color: 'var(--amber)' }}>
             <Bug size={14} weight="fill" /> Push Debug Info
@@ -486,7 +488,7 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {metrics && <HealthStats />}
+      {metrics && isDebug && <HealthStats />}
     </div>
   );
 };

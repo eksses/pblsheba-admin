@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDebugMode } from '../hooks/useDebugMode';
 
 const panelWrapper = {
   position: 'fixed',
@@ -119,29 +120,9 @@ const DebugPanel = () => {
   const [health, setHealth] = useState(null);
   const [minimized, setMinimized] = useState(true);
   const [apiError, setApiError] = useState(false);
-  const [forceShow, setForceShow] = useState(() => {
-    try {
-      return localStorage.getItem('pbl_debug_active') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
-  const showDebug = import.meta.env.VITE_SHOW_DEBUG === 'true' || forceShow;
+  const showDebug = useDebugMode();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    try {
-      if (params.get('debug') === 'true') {
-        localStorage.setItem('pbl_debug_active', 'true');
-        setForceShow(true);
-      } else if (params.get('debug') === 'false') {
-        localStorage.setItem('pbl_debug_active', 'false');
-        setForceShow(false);
-      }
-    } catch (e) {
-      console.warn('Storage access blocked:', e);
-    }
-
     if (!showDebug) return;
 
     const fetchHealth = async () => {
@@ -150,7 +131,7 @@ const DebugPanel = () => {
         if (!apiUrl) return;
         
         const base = apiUrl.replace(/\/api\/?$/, '');
-        const res = await fetch(`${base}/api/public/health`);
+        const res = await fetch(`${base}/api/public/health?debug=true`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         setHealth(data);
