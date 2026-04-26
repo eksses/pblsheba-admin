@@ -4,11 +4,31 @@ import './i18n'
 import './index.css'
 import App from './App.jsx'
 
-if (import.meta.env.PROD && import.meta.env.VITE_ENABLE_LOGS !== 'true') {
-  console.log = () => {};
-  console.info = () => {};
-  console.warn = () => {};
-  console.error = () => {};
+// Global Logger for iOS Debugging
+if (typeof window !== 'undefined') {
+  const DB_NAME = 'push_debug_db';
+  const LOG_STORE = 'console_logs';
+
+  const logToDB = (type, args) => {
+    try {
+      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onsuccess = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(LOG_STORE)) return;
+        const tx = db.transaction(LOG_STORE, 'readwrite');
+        tx.objectStore(LOG_STORE).add({ timestamp: Date.now(), type, msg });
+      };
+    } catch (e) {}
+  };
+
+  const originalLog = console.log;
+  const originalError = console.error;
+  const originalWarn = console.warn;
+
+  console.log = (...args) => { originalLog(...args); logToDB('log', args); };
+  console.error = (...args) => { originalError(...args); logToDB('error', args); };
+  console.warn = (...args) => { originalWarn(...args); logToDB('warn', args); };
 }
 
 createRoot(document.getElementById('root')).render(

@@ -428,6 +428,20 @@ const DashboardPage = () => {
                 </div>
               )}
             </div>
+
+            <div style={{ marginTop: 20, textAlign: 'center' }}>
+              <button 
+                onClick={() => navigate('/debug')}
+                style={{
+                  width: '100%', padding: '10px', borderRadius: 8,
+                  background: 'rgba(255, 165, 0, 0.1)', border: '1px solid orange',
+                  color: 'orange', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer'
+                }}
+              >
+                <Bug size={16} weight="bold" style={{ marginRight: 8 }} />
+                Open Advanced System Debug
+              </button>
+            </div>
           </div>
         </div>
       )}

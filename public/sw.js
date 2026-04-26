@@ -1,4 +1,4 @@
-const VERSION = 'v1.4';
+const VERSION = 'v1.5';
 
 const DB_NAME = 'push_debug_db';
 const STORE_NAME = 'notification_logs';
@@ -64,8 +64,12 @@ self.addEventListener('push', (event) => {
       
       try {
         pushData = event.data.json();
-        title = pushData.title || title;
-        body = pushData.message || pushData.body || body;
+        console.log('[SW] JSON Data:', pushData);
+        
+        // Support both flat and nested (Apple/FCM style) payloads
+        const displayData = pushData.notification || pushData;
+        title = displayData.title || title;
+        body = displayData.message || displayData.body || body;
       } catch (e) {
         console.warn('[SW] Data is not JSON, using text fallback');
         body = textData || body;
