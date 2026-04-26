@@ -132,12 +132,6 @@ const PaymentApiPage = () => {
           </div>
         </div>
 
-        <div className="data-card" style={{ border: '1px solid var(--primary)', background: 'var(--primary-light)' }}>
-          <p style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--primary)' }}>
-            DEBUG: Available Columns: {settings ? Object.keys(settings).join(', ') : 'Loading...'}
-          </p>
-        </div>
-
         <ConfirmModal
           open={showRotateConfirm}
           title={t('regenerate_key_confirm')}
