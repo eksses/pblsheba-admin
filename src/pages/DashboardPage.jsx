@@ -7,7 +7,11 @@ import {
   WarningCircle, 
   Money,
   BellRinging,
-  Export
+  Export,
+  Trash,
+  Bug,
+  X,
+  Info
 } from '@phosphor-icons/react';
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
@@ -60,12 +64,108 @@ const DashboardPage = () => {
       if (subscription) {
         await axiosClient.post('/notifications/subscribe', { subscription });
         setPushStatus('subscribed');
+        // Refresh debug info
+        fetchDebugInfo();
       }
     } catch (err) {
       if (!isSilent) {
         console.error('Notification setup failed:', err);
         setPushStatus('error');
       }
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    setPushStatus('requesting');
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      if (subscription) {
+        await axiosClient.post('/notifications/unsubscribe', { endpoint: subscription.endpoint });
+        await subscription.unsubscribe();
+      }
+      
+      setPushStatus('idle');
+      fetchDebugInfo();
+    } catch (err) {
+      console.error('Unsubscribe failed:', err);
+      setPushStatus('error');
+    }
+  };
+
+  const [clearAllLoading, setClearAllLoading] = useState(false);
+  const handleClearAll = async () => {
+    if (!window.confirm('This will delete ALL push subscriptions from the database. Continue?')) return;
+    setClearAllLoading(true);
+    try {
+      await axiosClient.delete('/notifications/clear-all');
+      alert('All subscriptions cleared');
+      setPushStatus('idle');
+      fetchDebugInfo();
+    } catch (err) {
+      console.error('Clear all failed:', err);
+      alert('Failed to clear subscriptions');
+    } finally {
+      setClearAllLoading(false);
+    }
+  };
+
+  const [debugInfo, setDebugInfo] = useState(null);
+  const [pushLogs, setPushLogs] = useState([]);
+
+  const fetchLogs = async () => {
+    try {
+      const db = await new Promise((resolve, reject) => {
+        const request = indexedDB.open('push_debug_db', 1);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      if (!db.objectStoreNames.contains('notification_logs')) return;
+
+      const tx = db.transaction('notification_logs', 'readonly');
+      const store = tx.objectStore('notification_logs');
+      const request = store.getAll();
+      request.onsuccess = () => {
+        setPushLogs(request.result.sort((a, b) => b.timestamp - a.timestamp));
+      };
+    } catch (err) {
+      console.warn('Failed to fetch push logs:', err);
+    }
+  };
+
+  const clearLogs = async () => {
+    try {
+      const db = await new Promise((resolve, reject) => {
+        const request = indexedDB.open('push_debug_db', 1);
+        request.onsuccess = () => resolve(request.result);
+      });
+      const tx = db.transaction('notification_logs', 'readwrite');
+      tx.objectStore('notification_logs').clear();
+      setPushLogs([]);
+    } catch (err) {}
+  };
+
+  const fetchDebugInfo = async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      setDebugInfo({
+        hasSW: 'serviceWorker' in navigator,
+        swState: registration.active?.state || 'unknown',
+        permission: Notification.permission,
+        subscription: subscription ? {
+          endpoint: subscription.endpoint,
+          expirationTime: subscription.expirationTime,
+        } : null
+      });
+      
+      if (subscription) setPushStatus('subscribed');
+      fetchLogs();
+    } catch (err) {
+      console.error('Debug fetch failed:', err);
     }
   };
 
@@ -79,8 +179,12 @@ const DashboardPage = () => {
 
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       initPush();
+      fetchDebugInfo();
     } else {
-      window.addEventListener('sw-ready', initPush);
+      window.addEventListener('sw-ready', () => {
+        initPush();
+        fetchDebugInfo();
+      });
     }
     return () => window.removeEventListener('sw-ready', initPush);
   }, []);
@@ -172,22 +276,124 @@ const DashboardPage = () => {
       )}
       
       {isNotifGranted && (
-        <button
-          onClick={handleTestPush}
-          disabled={testPushLoading}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            width: '100%', padding: '12px 18px', marginBottom: 20,
-            background: testPushLoading ? 'rgba(124, 58, 237, 0.05)' : 'rgba(124, 58, 237, 0.1)', 
-            border: '1px solid #7c3aed', borderRadius: 10,
-            color: '#a78bfa', cursor: testPushLoading ? 'not-allowed' : 'pointer', 
-            fontSize: '0.85rem', fontWeight: 600,
-            opacity: testPushLoading ? 0.6 : 1
-          }}
-        >
-          <BellRinging size={18} weight="fill" className={testPushLoading ? 'animate-pulse' : ''} />
-          {testPushLoading ? 'Sending Test Notification...' : 'Send Test Push Notification'}
-        </button>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+          <button
+            onClick={handleTestPush}
+            disabled={testPushLoading}
+            style={{
+              flex: 1, display: 'flex', alignItems: 'center', gap: 10,
+              padding: '12px 18px',
+              background: 'rgba(124, 58, 237, 0.1)', 
+              border: '1px solid #7c3aed', borderRadius: 10,
+              color: '#a78bfa', cursor: testPushLoading ? 'not-allowed' : 'pointer', 
+              fontSize: '0.85rem', fontWeight: 600
+            }}
+          >
+            <BellRinging size={18} weight="fill" className={testPushLoading ? 'animate-pulse' : ''} />
+            {testPushLoading ? 'Sending...' : 'Test Push'}
+          </button>
+
+          <button
+            onClick={handleUnsubscribe}
+            disabled={pushStatus === 'requesting'}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '12px 18px',
+              background: 'rgba(239, 68, 68, 0.1)', 
+              border: '1px solid #ef4444', borderRadius: 10,
+              color: '#ef4444', cursor: 'pointer', 
+              fontSize: '0.85rem', fontWeight: 600
+            }}
+          >
+            <X size={18} weight="bold" />
+            Unsubscribe
+          </button>
+        </div>
+      )}
+
+      {debugInfo && (
+        <div className="data-card" style={{ marginBottom: 20, border: '1px dashed #444', background: '#0f172a' }}>
+          <div className="data-card-header" style={{ color: 'var(--amber)' }}>
+            <Bug size={14} weight="fill" /> Push Debug Info
+          </div>
+          <div style={{ padding: '0 18px 18px' }}>
+            <div className="data-row">
+              <span className="data-label">Permission</span>
+              <span className="data-value" style={{ color: debugInfo.permission === 'granted' ? 'var(--green)' : 'var(--amber)' }}>
+                {debugInfo.permission}
+              </span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">SW Active</span>
+              <span className="data-value">{debugInfo.swState}</span>
+            </div>
+            {debugInfo.subscription ? (
+              <>
+                <div className="data-row">
+                  <span className="data-label">Endpoint</span>
+                  <span className="data-value" style={{ fontSize: '0.65rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {debugInfo.subscription.endpoint}
+                  </span>
+                </div>
+                <div style={{ marginTop: 10 }}>
+                  <button 
+                    onClick={handleClearAll}
+                    disabled={clearAllLoading}
+                    style={{
+                      width: '100%', padding: '8px', borderRadius: 8,
+                      background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444',
+                      color: '#ef4444', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer'
+                    }}
+                  >
+                    <Trash size={14} weight="fill" style={{ marginRight: 6 }} />
+                    {clearAllLoading ? 'Clearing...' : 'Clear All DB Subscriptions'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: '0.8rem', color: '#888', marginTop: 10, textAlign: 'center' }}>
+                Not Subscribed to Push Manager
+              </div>
+            )}
+
+            <div style={{ marginTop: 20, borderTop: '1px solid #334155', pt: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 10 }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>
+                  Local Device Logs
+                </span>
+                <button onClick={fetchLogs} className="btn btn-ghost btn-sm" style={{ padding: '2px 8px', height: 'auto' }}>
+                  Refresh
+                </button>
+              </div>
+              
+              {pushLogs.length > 0 ? (
+                <div style={{ maxHeight: '200px', overflowY: 'auto', fontSize: '0.7rem' }}>
+                  {pushLogs.map((log) => (
+                    <div key={log.timestamp} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--green)' }}>
+                        <span style={{ fontWeight: 700 }}>{log.title}</span>
+                        <span style={{ color: '#64748b' }}>{new Date(log.timestamp).toLocaleTimeString()}</span>
+                      </div>
+                      <div style={{ color: '#cbd5e1', marginTop: 2 }}>{log.body}</div>
+                      {log.raw && (
+                        <div style={{ color: '#64748b', fontSize: '0.6rem', marginTop: 4, fontStyle: 'italic', wordBreak: 'break-all' }}>
+                          Raw: {log.raw}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <button onClick={clearLogs} style={{ width: '100%', background: 'none', border: 'none', color: '#ef4444', fontSize: '0.65rem', cursor: 'pointer', marginTop: 10 }}>
+                    Clear Logs
+                  </button>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', color: '#475569', fontSize: '0.7rem', padding: '10px 0' }}>
+                  No notifications logged on this device yet.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="metrics-grid">

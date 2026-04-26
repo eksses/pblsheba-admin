@@ -1,4 +1,44 @@
-const VERSION = 'v1.2';
+const VERSION = 'v1.4';
+
+const DB_NAME = 'push_debug_db';
+const STORE_NAME = 'notification_logs';
+
+const logPushEvent = async (data) => {
+  try {
+    const db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: 'timestamp' });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    
+    // Keep only last 50 logs
+    const countRequest = store.count();
+    countRequest.onsuccess = () => {
+      if (countRequest.result > 50) {
+        store.clear(); // Simple cleanup if it gets too large
+      }
+    };
+
+    store.add({
+      timestamp: Date.now(),
+      title: data.title,
+      body: data.body,
+      raw: data.raw,
+      receivedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('[SW] Failed to log push event:', err);
+  }
+};
 
 self.addEventListener('install', () => {
   console.log('SW installed', VERSION);
@@ -50,8 +90,12 @@ self.addEventListener('push', (event) => {
     ]
   };
 
-  const promiseChain = self.registration.showNotification(title, options)
-    .catch(err => console.error('[SW] showNotification failed:', err));
+  const logPromise = logPushEvent({ title, body, raw: event.data?.text() });
+
+  const promiseChain = Promise.all([
+    self.registration.showNotification(title, options),
+    logPromise
+  ]).catch(err => console.error('[SW] showNotification or log failed:', err));
 
   event.waitUntil(promiseChain);
 });
