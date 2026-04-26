@@ -346,7 +346,18 @@ const resources = {
       "api_key_hint": "Include this key in the 'apiKey' field of your POST request",
       "success_rotate_key": "API Key rotated successfully",
       "copy_webhook": "Copy Webhook URL",
-      "copy_api_key": "Copy API Key"
+      "copy_api_key": "Copy API Key",
+      "system_stability": "System Stability",
+      "system_health": "System Health",
+      "connectivity_lost": "Connectivity Lost",
+      "copy_success": "Copied to clipboard!",
+      "error_update": "Failed to update",
+      "error_fetch_data": "Failed to fetch data",
+      "regenerate_key_confirm": "Regenerate API Key?",
+      "regenerate_key_desc": "This will invalidate the current key immediately and stop any active automated SMS forwarding until the new key is configured in the app.",
+      "confirm_regenerate": "Regenerate Now",
+      "show": "Show",
+      "hide": "Hide"
     }
   },
   bn: {
@@ -647,7 +658,18 @@ const resources = {
       "api_key_hint": "আপনার পোস্ট রিকোয়েস্টের 'apiKey' ফিল্ডে এই কীটি অন্তর্ভুক্ত করুন",
       "success_rotate_key": "এপিআই কী সফলভাবে পরিবর্তন করা হয়েছে",
       "copy_webhook": "ইউআরএল কপি করুন",
-      "copy_api_key": "কী কপি করুন"
+      "copy_api_key": "কী কপি করুন",
+      "system_stability": "সিস্টেম স্থিতিশীলতা",
+      "system_health": "সিস্টেম স্বাস্থ্য",
+      "connectivity_lost": "সংযোগ বিচ্ছিন্ন",
+      "copy_success": "ক্লিপবোর্ডে কপি হয়েছে!",
+      "error_update": "আপডেট করতে ব্যর্থ হয়েছে",
+      "error_fetch_data": "তথ্য সংগ্রহ করতে ব্যর্থ হয়েছে",
+      "regenerate_key_confirm": "এপিআই কি পরিবর্তন করবেন?",
+      "regenerate_key_desc": "এটি বর্তমান কি-টিকে অবিলম্বে বাতিল করে দেবে। নতুন কি অ্যাপে সেট না করা পর্যন্ত অটোমেটেড এসএমএস গ্রহণ বন্ধ থাকবে।",
+      "confirm_regenerate": "এখনই পরিবর্তন করুন",
+      "show": "দেখুন",
+      "hide": "লুকান"
     }
   }
 };

@@ -27,7 +27,8 @@ const PaymentApiPage = () => {
       const { data } = await axiosClient.get('/admin/settings');
       setSettings(data);
     } catch (err) {
-      toast.error(t('error_fetch_data'));
+      console.error('Failed to fetch settings:', err);
+      toast.error(err.response?.data?.message || 'Failed to fetch settings');
     } finally {
       setLoading(false);
     }
@@ -42,7 +43,8 @@ const PaymentApiPage = () => {
       setSettings(prev => ({ ...prev, smsWebhookKey: data.key }));
       toast.success(t('success_rotate_key'));
     } catch (err) {
-      toast.error(t('error_update'));
+      console.error('Failed to rotate key:', err);
+      toast.error(err.response?.data?.message || t('error_update'));
     } finally {
       setRotating(false);
     }
@@ -103,7 +105,7 @@ const PaymentApiPage = () => {
                 style={{ background: 'var(--bg-secondary)', letterSpacing: showKey ? 'normal' : '4px' }} 
               />
               <button className="btn btn-outline btn-sm" onClick={() => setShowKey(!showKey)}>
-                {showKey ? 'Hide' : 'Show'}
+                {showKey ? t('hide') : t('show')}
               </button>
               <button className="btn btn-outline btn-sm" onClick={() => copyToClipboard(settings?.smsWebhookKey, setCopiedKey)}>
                 {copiedKey ? <Check size={18} /> : <Copy size={18} />}
@@ -129,8 +131,9 @@ const PaymentApiPage = () => {
 
         <ConfirmModal
           open={showRotateConfirm}
-          title={t('rotate_key_title') || 'Regenerate API Key?'}
-          message={t('rotate_key_msg') || 'Existing integrations using the old key will stop working immediately.'}
+          title={t('regenerate_key_confirm')}
+          message={t('regenerate_key_desc')}
+          confirmText={t('confirm_regenerate')}
           onConfirm={handleRotateKey}
           onCancel={() => setShowRotateConfirm(false)}
         />

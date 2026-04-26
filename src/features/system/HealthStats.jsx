@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Pulse, Database, HardDrive, Cpu, ShieldCheck } from '@phosphor-icons/react';
 import axiosClient from '../../api/axiosClient';
+import { useTranslation } from 'react-i18next';
 
 const HealthStats = () => {
+  const { t } = useTranslation();
   const [health, setHealth] = useState(null);
   const [error, setError] = useState(false);
 
@@ -27,8 +29,8 @@ const HealthStats = () => {
       <div className="health-card error">
         <Pulse size={20} weight="bold" />
         <div className="health-content">
-          <p className="health-label">System Health</p>
-          <p className="health-value">Connectivity Lost</p>
+          <p className="health-label">{t('system_health')}</p>
+          <p className="health-value">{t('connectivity_lost')}</p>
         </div>
       </div>
     );
@@ -37,15 +39,15 @@ const HealthStats = () => {
   if (!health) return null;
 
   const getStatusColor = (s) => {
-    if (s === 'connected' || s === 'active' || s === 'up') return 'var(--green-500)';
-    return 'var(--danger)';
+    if (s === 'connected' || s === 'active' || s === 'up') return '#10b981'; // Green-500
+    return '#dc2626'; // Danger
   };
 
   return (
     <div className="health-section">
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <ShieldCheck size={18} weight="fill" color="var(--primary)" />
-        <h3 style={{ fontSize: '1rem', fontWeight: 800 }}>System Stability</h3>
+        <h3 style={{ fontSize: '1rem', fontWeight: 800 }}>{t('system_stability')}</h3>
       </div>
       
       <div className="health-grid">
