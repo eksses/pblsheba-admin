@@ -98,7 +98,7 @@ self.addEventListener('push', (event) => {
     ]
   };
 
-  const logPromise = logPushEvent({ title, body, raw: event.data?.text() });
+  const logPromise = logPushEvent({ title, body, raw: pushData ? JSON.stringify(pushData) : 'non-json data' });
 
   const promiseChain = Promise.all([
     self.registration.showNotification(title, options),
