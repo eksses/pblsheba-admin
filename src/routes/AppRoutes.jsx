@@ -87,7 +87,7 @@ const AppRoutes = () => {
           <Route path="/profile" element={<StaffProfilePage />} />
           <Route path="/notifications" element={<NotificationCenter />} />
           <Route path="/payment-logs" element={<PaymentLogs />} />
-          <Route path="/debug" element={<DebugPage />} />
+          <Route path="/logs" element={<DebugPage />} />
           
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="*" element={<Navigate to="/404" replace />} />

@@ -431,7 +431,7 @@ const DashboardPage = () => {
 
             <div style={{ marginTop: 20, textAlign: 'center' }}>
               <button 
-                onClick={() => navigate('/debug')}
+                onClick={() => navigate('/logs')}
                 style={{
                   width: '100%', padding: '10px', borderRadius: 8,
                   background: 'rgba(255, 165, 0, 0.1)', border: '1px solid orange',

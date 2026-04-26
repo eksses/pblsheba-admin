@@ -9,7 +9,8 @@ import {
   HandHeart,
   ClipboardText,
   Megaphone,
-  Receipt
+  Receipt,
+  Bug
 } from '@phosphor-icons/react';
 
 export const OWNER_PRIMARY = [
@@ -28,6 +29,7 @@ export const OWNER_MORE = [
   { to: '/notifications', icon: Megaphone, key: 'notification_center' },
   { to: '/payment-logs', icon: Receipt, key: 'payment_logs' },
   { to: '/profile', icon: IdentificationCard, key: 'my_profile' },
+  { to: '/logs', icon: Bug, key: 'System Debug' },
 ];
 
 export const EMPLOYEE_PRIMARY = [
