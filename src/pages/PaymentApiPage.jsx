@@ -44,7 +44,10 @@ const PaymentApiPage = () => {
       toast.success(t('success_rotate_key'));
     } catch (err) {
       console.error('Failed to rotate key:', err);
-      toast.error(err.response?.data?.message || t('error_update'));
+      const msg = err.response?.data?.details 
+        ? `${err.response.data.message}: ${err.response.data.details.message || JSON.stringify(err.response.data.details)}`
+        : (err.response?.data?.message || t('error_update'));
+      toast.error(msg);
     } finally {
       setRotating(false);
     }
