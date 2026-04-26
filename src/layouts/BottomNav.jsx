@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { DotsThree, House } from '@phosphor-icons/react';
+import { DotsThree, House, X } from '@phosphor-icons/react';
 import { useAuthStore } from '../store/useAuthStore';
 import { OWNER_NAVIGATION, EMPLOYEE_NAVIGATION, OWNER_PRIMARY, EMPLOYEE_PRIMARY } from './navigation';
 import { haptic } from '../utils/haptic';
@@ -14,7 +14,7 @@ const BottomNav = () => {
   const isOwner = user?.role === 'owner';
 
   const primaryItems = isOwner ? OWNER_PRIMARY : EMPLOYEE_PRIMARY;
-  const moreItems    = isOwner ? OWNER_MORE    : EMPLOYEE_MORE;
+  const navStructure = isOwner ? OWNER_NAVIGATION : EMPLOYEE_NAVIGATION;
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -64,7 +64,7 @@ const BottomNav = () => {
               </button>
             </div>
             <div className="m-body" style={{ padding: '12px 16px 40px' }}>
-              {OWNER_NAVIGATION.slice(1).map((section) => (
+              {navStructure.slice(1).map((section) => (
                 <div key={section.category} style={{ marginBottom: 24 }}>
                   <h3 style={{ 
                     fontSize: '0.7rem', 
