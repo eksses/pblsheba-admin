@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, IdentificationCard } from '@phosphor-icons/react';
+import { Plus, IdentificationCard, FileArrowDown } from '@phosphor-icons/react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
+import { exportToExcel } from '../../utils/excelExport';
+import { haptic } from '../../utils/haptic';
 
 import axiosClient from '../../api/axiosClient';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -177,6 +180,29 @@ const EmployeesPage = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    haptic('medium');
+    if (list.length === 0) {
+      toast.error(t('no_data_to_export'));
+      return;
+    }
+
+    const exportData = list.map(e => ({
+      [t('name')]: e.name,
+      [t('phone')]: e.phone,
+      [t('nid')]: e.nid,
+      [t('email')]: e.email,
+      [t('father_name')]: e.fatherName,
+      [t('address')]: e.address,
+      [t('dob')]: e.dob ? new Date(e.dob).toLocaleDateString() : '—',
+      [t('status')]: e.status,
+      [t('created_at')]: new Date(e.createdAt).toLocaleString()
+    }));
+
+    exportToExcel(exportData, 'Staff_List', 'Employees');
+    toast.success(t('export_success'));
+  };
+
   if (user.role !== 'owner') {
     return (
       <div className="fade-up">
@@ -195,9 +221,14 @@ const EmployeesPage = () => {
           <h1>{t('employees_title')}</h1>
           <p className="text-muted">{list.length} {t('employees')}</p>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={openNew}>
-          <Plus size={18} weight="bold" /> {t('add_staff')}
-        </button>
+        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          <button className="btn btn-outline btn-sm" onClick={handleExportExcel}>
+            <FileArrowDown size={18} weight="bold" /> {t('export')}
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={openNew}>
+            <Plus size={18} weight="bold" /> {t('add_staff')}
+          </button>
+        </div>
       </div>
 
       {loading && list.length === 0 ? (

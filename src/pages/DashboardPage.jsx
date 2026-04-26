@@ -11,7 +11,8 @@ import {
   Trash,
   Bug,
   X,
-  Info
+  Info,
+  Clock
 } from '@phosphor-icons/react';
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
@@ -20,6 +21,7 @@ import { useDebugMode } from '../hooks/useDebugMode';
 import { useToast } from '../context/ToastContext';
 import ConfirmModal from '../components/common/ConfirmModal';
 import { haptic } from '../utils/haptic';
+import Skeleton from '../components/ui/Skeleton';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -30,6 +32,7 @@ const DashboardPage = () => {
   const [metrics, setMetrics] = useState(
     dashboardCache || { totalMembers: 0, totalEmployees: 0, pendingApprovals: 0, totalCollected: 0 }
   );
+  const [loading, setLoading] = useState(!dashboardCache);
   const [pushStatus, setPushStatus] = useState('idle');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
@@ -197,12 +200,14 @@ const DashboardPage = () => {
   }, []);
 
   useEffect(() => { 
+    setLoading(true);
     axiosClient.get('/admin/dashboard')
       .then(r => {
         setMetrics(r.data);
         setDashboardCache(r.data);
       })
-      .catch(() => {}); 
+      .catch(() => {})
+      .finally(() => setLoading(false)); 
   }, [setDashboardCache]);
 
   const [testPushLoading, setTestPushLoading] = useState(false);
@@ -463,7 +468,11 @@ const DashboardPage = () => {
               <Icon size={20} weight="duotone" />
             </div>
             <div className="metric-label">{t(key)}</div>
-            <div className="metric-value">{value}</div>
+            {loading ? (
+              <Skeleton height="32px" width="60%" style={{ marginTop: 8 }} />
+            ) : (
+              <div className="metric-value">{value}</div>
+            )}
           </div>
         ))}
       </div>
