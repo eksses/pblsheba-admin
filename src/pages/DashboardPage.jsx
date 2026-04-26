@@ -210,13 +210,27 @@ const DashboardPage = () => {
       });
       
       const { delivery } = response.data;
-      alert(`Server Response: Sent=${delivery.sent}, Failed=${delivery.failed}, Cleaned=${delivery.cleaned}`);
+      const endpoints = delivery.endpoints ? `\nEndpoints: ${delivery.endpoints.join(', ')}` : '';
+      alert(`Server Response: Sent=${delivery.sent}, Failed=${delivery.failed}, Cleaned=${delivery.cleaned}${endpoints}`);
       
       setTimeout(() => setTestPushLoading(false), 1000);
     } catch (err) {
       console.error('Test push failed:', err);
       alert('Test push failed: ' + (err.response?.data?.message || err.message));
       setTestPushLoading(false);
+    }
+  };
+
+  const handleLocalTest = async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification('Local Test', {
+        body: 'If you see this, browser-level notifications are working!',
+        icon: '/logo.png',
+        tag: 'local-test'
+      });
+    } catch (err) {
+      alert('Local test failed: ' + err.message);
     }
   };
 
@@ -326,6 +340,28 @@ const DashboardPage = () => {
             <div className="data-row">
               <span className="data-label">SW Active</span>
               <span className="data-value">{debugInfo.swState}</span>
+            </div>
+            <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+              <button 
+                onClick={handleLocalTest}
+                style={{
+                  flex: 1, padding: '6px', borderRadius: 6,
+                  background: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6',
+                  color: '#60a5fa', fontSize: '0.7rem', cursor: 'pointer'
+                }}
+              >
+                Test Browser Permission
+              </button>
+              <button 
+                onClick={fetchDebugInfo}
+                style={{
+                  padding: '6px 10px', borderRadius: 6,
+                  background: 'rgba(255,255,255,0.1)', border: '1px solid #444',
+                  color: '#fff', fontSize: '0.7rem', cursor: 'pointer'
+                }}
+              >
+                Refresh
+              </button>
             </div>
             {debugInfo.subscription ? (
               <>
