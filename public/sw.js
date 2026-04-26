@@ -1,4 +1,4 @@
-const VERSION = 'v1.5';
+const VERSION = 'v1.6';
 
 const DB_NAME = 'push_debug_db';
 const STORE_NAME = 'notification_logs';
@@ -7,12 +7,15 @@ const logPushEvent = async (data) => {
   try {
     const db = await new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, 1);
-      request.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'timestamp' });
-        }
-      };
+      request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'timestamp' });
+      }
+      if (!db.objectStoreNames.contains('console_logs')) {
+        db.createObjectStore('console_logs', { keyPath: 'id', autoIncrement: true });
+      }
+    };
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -60,23 +63,24 @@ self.addEventListener('push', (event) => {
   try {
     if (event.data) {
       const textData = event.data.text();
-      console.log('[SW] Raw Data:', textData);
+      console.log('[SW] Push Data Received:', textData);
       
       try {
         pushData = event.data.json();
-        console.log('[SW] JSON Data:', pushData);
+        console.log('[SW] JSON Payload:', pushData);
         
-        // Support both flat and nested (Apple/FCM style) payloads
         const displayData = pushData.notification || pushData;
         title = displayData.title || title;
         body = displayData.message || displayData.body || body;
       } catch (e) {
-        console.warn('[SW] Data is not JSON, using text fallback');
+        console.warn('[SW] Push data is not JSON, using text fallback');
         body = textData || body;
       }
+    } else {
+      console.warn('[SW] Push event received but no data attached');
     }
   } catch (err) {
-    console.error('[SW] Error parsing push data:', err);
+    console.error('[SW] Error processing push event:', err);
   }
 
   console.log('[SW] Showing notification:', title, body);

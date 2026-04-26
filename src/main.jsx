@@ -13,6 +13,14 @@ if (typeof window !== 'undefined') {
     try {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
       const request = indexedDB.open(DB_NAME, 1);
+      
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(LOG_STORE)) {
+          db.createObjectStore(LOG_STORE, { keyPath: 'id', autoIncrement: true });
+        }
+      };
+
       request.onsuccess = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(LOG_STORE)) return;
