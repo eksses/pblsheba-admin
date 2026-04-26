@@ -44,13 +44,18 @@ const DashboardPage = () => {
     try {
       const registration = await navigator.serviceWorker.ready;
       const existing = await registration.pushManager.getSubscription();
-      if (existing) await existing.unsubscribe();
-
+      
       const publicKey = 'BGJBhJEhNlojxGRksjriJrIgH7-BCs0q4D7_rthm5AKP3tJnjBpU46mIiqZ87UNQSvcpuIlGb51ouqHrgvAOMY0';
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
-      });
+      const applicationServerKey = urlBase64ToUint8Array(publicKey);
+
+      let subscription = existing;
+
+      if (!existing) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey
+        });
+      }
 
       if (subscription) {
         await axiosClient.post('/notifications/subscribe', { subscription });
