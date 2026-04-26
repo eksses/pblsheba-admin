@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import axiosClient from '../api/axiosClient';
 import { useToast } from '../context/ToastContext';
 import Spinner from '../components/ui/Spinner';
-import { Key, Copy, ArrowsClockwise, TerminalWindow, Check } from '@phosphor-icons/react';
+import { Key, Copy, ArrowsClockwise, TerminalWindow, Check, Warning } from '@phosphor-icons/react';
+import ConfirmModal from '../components/common/ConfirmModal';
+import { haptic } from '../utils/haptic';
 
 const PaymentApiPage = () => {
   const { t } = useTranslation();
@@ -14,6 +16,7 @@ const PaymentApiPage = () => {
   const [showKey, setShowKey] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [showRotateConfirm, setShowRotateConfirm] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -31,8 +34,9 @@ const PaymentApiPage = () => {
   };
 
   const handleRotateKey = async () => {
-    if (!window.confirm(t('rotate_key') + '?')) return;
+    setShowRotateConfirm(false);
     setRotating(true);
+    haptic('medium');
     try {
       const { data } = await axiosClient.post('/admin/settings/regenerate-sms-key');
       setSettings(prev => ({ ...prev, smsWebhookKey: data.key }));
@@ -112,13 +116,24 @@ const PaymentApiPage = () => {
             <button 
               className="btn btn-primary btn-sm" 
               style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
-              onClick={handleRotateKey}
+              onClick={() => {
+                haptic('heavy');
+                setShowRotateConfirm(true);
+              }}
               disabled={rotating}
             >
               {rotating ? <Spinner size={16} /> : <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><ArrowsClockwise size={18} /> {t('rotate_key')}</div>}
             </button>
           </div>
         </div>
+
+        <ConfirmModal
+          open={showRotateConfirm}
+          title={t('rotate_key_title') || 'Regenerate API Key?'}
+          message={t('rotate_key_msg') || 'Existing integrations using the old key will stop working immediately.'}
+          onConfirm={handleRotateKey}
+          onCancel={() => setShowRotateConfirm(false)}
+        />
 
         {/* Integration Guide Card */}
         <div className="data-card">

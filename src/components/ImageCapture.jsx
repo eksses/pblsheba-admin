@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
+import { useToast } from '../context/ToastContext';
 import { Camera, Image as ImageIcon, X } from '@phosphor-icons/react';
 
 const ImageCapture = ({ onImageChange, currentImage }) => {
+  const toast = useToast();
   const [preview, setPreview] = useState(currentImage);
   const [isCapturing, setIsCapturing] = useState(false);
   const videoRef = useRef(null);
@@ -33,8 +35,7 @@ const ImageCapture = ({ onImageChange, currentImage }) => {
       setIsCapturing(true);
     } catch (err) {
       console.error("Camera access error:", err);
-      if (window.__pbl_toast) window.__pbl_toast.error("Could not access camera. Please check permissions.");
-      else alert("Could not access camera. Please check permissions.");
+      toast.error("Could not access camera. Please check permissions.");
     }
   };
 

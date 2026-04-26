@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { CaretLeft, Trash, Copy, Bug, Clock, Info } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 
 const DebugPage = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [logs, setLogs] = useState([]);
   const [pushLogs, setPushLogs] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -73,7 +75,7 @@ const DebugPage = () => {
       time: new Date().toISOString()
     };
     navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-    alert('Debug data copied to clipboard!');
+    toast.success('Debug data copied to clipboard!');
   };
 
   return (

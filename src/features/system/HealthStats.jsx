@@ -8,7 +8,7 @@ const HealthStats = () => {
 
   const fetchHealth = async () => {
     try {
-      const res = await axiosClient.get('/public/health');
+      const res = await axiosClient.get('/public/health?debug=true');
       setHealth(res.data);
       setError(false);
     } catch (err) {
