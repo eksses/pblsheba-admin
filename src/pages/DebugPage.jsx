@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CaretLeft, Trash, Copy, Bug, Clock, Info } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
-import ShellLayout from '../layouts/ShellLayout';
 
 const DebugPage = () => {
   const navigate = useNavigate();
@@ -78,8 +77,7 @@ const DebugPage = () => {
   };
 
   return (
-    <ShellLayout>
-      <div className="fade-up" style={{ padding: '20px' }}>
+    <div className="fade-up" style={{ padding: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm" style={{ padding: '8px' }}>
             <CaretLeft size={20} />
@@ -149,7 +147,6 @@ const DebugPage = () => {
           </div>
         )}
       </div>
-    </ShellLayout>
   );
 };
 
