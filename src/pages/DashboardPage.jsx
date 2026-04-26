@@ -6,7 +6,8 @@ import {
   IdentificationCard, 
   WarningCircle, 
   Money,
-  BellRinging
+  BellRinging,
+  Export
 } from '@phosphor-icons/react';
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
@@ -110,8 +111,12 @@ const DashboardPage = () => {
     }
   };
 
+  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone);
+  const showIOSPrompt = isIOS && !isStandalone;
+
   const hasNotif = typeof window !== 'undefined' && 'Notification' in window;
-  const showNotifBanner = hasNotif && window.Notification?.permission !== 'granted' && window.Notification?.permission !== 'denied';
+  const showNotifBanner = hasNotif && window.Notification?.permission !== 'granted' && window.Notification?.permission !== 'denied' && !showIOSPrompt;
   const isNotifGranted = hasNotif && window.Notification?.permission === 'granted';
 
   const cards = [
@@ -129,6 +134,21 @@ const DashboardPage = () => {
           <p className="text-muted">{t('platform_overview')}</p>
         </div>
       </div>
+
+      {showIOSPrompt && (
+        <div style={{
+          background: '#1a2b3c', border: '1px solid #2196f3', borderRadius: 10,
+          padding: '16px', marginBottom: 20, color: '#90caf9'
+        }}>
+          <p style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Export size={18} weight="bold" />
+            {t('install_pwa_ios', 'Install for Notifications')}
+          </p>
+          <p style={{ fontSize: '0.8rem', lineHeight: 1.4 }}>
+            {t('ios_pwa_instruction', 'To receive notifications on iPhone: Tap the share button and select "Add to Home Screen".')}
+          </p>
+        </div>
+      )}
 
       {showNotifBanner && (
         <button

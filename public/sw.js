@@ -1,4 +1,4 @@
-const VERSION = 'v1.1';
+const VERSION = 'v1.2';
 
 self.addEventListener('install', () => {
   console.log('SW installed', VERSION);
@@ -15,12 +15,13 @@ self.addEventListener('push', (event) => {
   
   let title = 'PBL Sheba';
   let body = 'You have a new update';
+  let pushData = null;
 
   if (event.data) {
     try {
-      const data = event.data.json();
-      title = data.title || title;
-      body = data.message || data.body || body;
+      pushData = event.data.json();
+      title = pushData.title || title;
+      body = pushData.message || pushData.body || body;
     } catch (e) {
       body = event.data.text();
     }
@@ -30,7 +31,10 @@ self.addEventListener('push', (event) => {
     body: body,
     icon: '/logo.png',
     badge: '/logo.png',
-    vibrate: [100, 50, 100]
+    vibrate: [100, 50, 100],
+    data: {
+      url: pushData?.data?.url || pushData?.url || '/'
+    }
   });
 
   event.waitUntil(promiseChain);
