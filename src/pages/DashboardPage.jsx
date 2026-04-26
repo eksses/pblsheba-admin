@@ -17,16 +17,21 @@ import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
 import HealthStats from '../features/system/HealthStats';
 import { useDebugMode } from '../hooks/useDebugMode';
+import { useToast } from '../context/ToastContext';
+import ConfirmModal from '../components/common/ConfirmModal';
+import { haptic } from '../utils/haptic';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isDebug = useDebugMode();
+  const toast = useToast();
   const { dashboardCache, setDashboardCache } = useAuthStore();
   const [metrics, setMetrics] = useState(
     dashboardCache || { totalMembers: 0, totalEmployees: 0, pendingApprovals: 0, totalCollected: 0 }
   );
   const [pushStatus, setPushStatus] = useState('idle');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -98,16 +103,16 @@ const DashboardPage = () => {
 
   const [clearAllLoading, setClearAllLoading] = useState(false);
   const handleClearAll = async () => {
-    if (!window.confirm('This will delete ALL push subscriptions from the database. Continue?')) return;
     setClearAllLoading(true);
+    setShowClearConfirm(false);
     try {
       await axiosClient.delete('/notifications/clear-all');
-      alert('All subscriptions cleared');
+      toast.success('All subscriptions cleared');
       setPushStatus('idle');
       fetchDebugInfo();
     } catch (err) {
       console.error('Clear all failed:', err);
-      alert('Failed to clear subscriptions');
+      toast.error('Failed to clear subscriptions');
     } finally {
       setClearAllLoading(false);
     }
@@ -213,12 +218,12 @@ const DashboardPage = () => {
       
       const { delivery } = response.data;
       const endpoints = delivery.endpoints ? `\nEndpoints: ${delivery.endpoints.join(', ')}` : '';
-      alert(`Server Response: Sent=${delivery.sent}, Failed=${delivery.failed}, Cleaned=${delivery.cleaned}${endpoints}`);
+      toast.success(`Sent=${delivery.sent}, Failed=${delivery.failed}`);
       
       setTimeout(() => setTestPushLoading(false), 1000);
     } catch (err) {
       console.error('Test push failed:', err);
-      alert('Test push failed: ' + (err.response?.data?.message || err.message));
+      toast.error('Test push failed: ' + (err.response?.data?.message || err.message));
       setTestPushLoading(false);
     }
   };
@@ -232,7 +237,7 @@ const DashboardPage = () => {
         tag: 'local-test'
       });
     } catch (err) {
-      alert('Local test failed: ' + err.message);
+      toast.error('Local test failed: ' + err.message);
     }
   };
 
@@ -375,7 +380,10 @@ const DashboardPage = () => {
                 </div>
                 <div style={{ marginTop: 10 }}>
                   <button 
-                    onClick={handleClearAll}
+                    onClick={() => {
+                      haptic('medium');
+                      setShowClearConfirm(true);
+                    }}
                     disabled={clearAllLoading}
                     style={{
                       width: '100%', padding: '8px', borderRadius: 8,
@@ -489,6 +497,15 @@ const DashboardPage = () => {
       )}
 
       {metrics && isDebug && <HealthStats />}
+
+      <ConfirmModal 
+        open={showClearConfirm}
+        title="Clear All Subscriptions?"
+        message="This will delete ALL push subscriptions from the database. This action cannot be undone."
+        onConfirm={handleClearAll}
+        onCancel={() => setShowClearConfirm(false)}
+        type="danger"
+      />
     </div>
   );
 };

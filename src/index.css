@@ -182,7 +182,30 @@ h1, h2, h3, h4 {
 
 .sidebar-nav {
   flex: 1;
-  padding: 16px 12px;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Space between categories */
+  overflow-y: auto;
+}
+
+.nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-category-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-subtle);
+  padding: 0 12px;
+  margin-bottom: 4px;
+}
+
+.nav-section-items {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -192,11 +215,11 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 12px;
+  padding: 10px 12px;
   border-radius: var(--radius-md);
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   transition: all 0.15s ease;
 }
 
@@ -208,6 +231,7 @@ h1, h2, h3, h4 {
 .nav-link.active {
   background: var(--primary-mid);
   color: var(--primary);
+  font-weight: 700;
 }
 
 .nav-link.active svg { color: var(--primary); }
@@ -264,6 +288,16 @@ h1, h2, h3, h4 {
 
 .bnav-item.active { 
   color: var(--primary);
+}
+
+.bnav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  width: 4px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: 50%;
 }
 
 .bnav-item svg { 
@@ -503,7 +537,16 @@ h1, h2, h3, h4 {
   min-height: 44px;
 }
 
-.btn:active { transform: scale(0.97); }
+.btn:active { 
+  transform: scale(0.96); 
+  filter: brightness(0.9);
+}
+
+@media (hover: none) {
+  .btn:active {
+    transform: scale(0.94);
+  }
+}
 
 .btn-primary {
   background: var(--primary);
@@ -601,14 +644,19 @@ textarea.form-input {
   position: fixed;
   inset: 0;
   z-index: 9000;
-  background: rgba(10, 18, 32, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: flex-end;   
   justify-content: center;
+  animation: mFadeIn 0.2s ease-out;
 }
 
+@keyframes mFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
 
 .m-dialog {
   width: 100%;
@@ -620,8 +668,8 @@ textarea.form-input {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 -20px 60px rgba(0,0,0,0.25);
-  animation: mSlideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1) both;
+  box-shadow: 0 -20px 60px rgba(0,0,0,0.15);
+  animation: mSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   will-change: transform;
 }
 

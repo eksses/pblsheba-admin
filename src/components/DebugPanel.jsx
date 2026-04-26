@@ -127,11 +127,18 @@ const DebugPanel = () => {
 
     const fetchHealth = async () => {
       try {
+        const isDev = import.meta.env.DEV;
         const apiUrl = import.meta.env.VITE_API_URL;
-        if (!apiUrl) return;
         
-        const base = apiUrl.replace(/\/api\/?$/, '');
-        const res = await fetch(`${base}/api/public/health?debug=true`);
+        let endpoint;
+        if (isDev && apiUrl) {
+          const base = apiUrl.replace(/\/api\/?$/, '');
+          endpoint = `${base}/api/public/health?debug=true`;
+        } else {
+          endpoint = '/api/public/health?debug=true';
+        }
+
+        const res = await fetch(endpoint);
         if (!res.ok) throw new Error();
         const data = await res.json();
         setHealth(data);

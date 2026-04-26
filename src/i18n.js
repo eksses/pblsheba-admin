@@ -61,6 +61,13 @@ const resources = {
       "sign_out": "Sign Out",
       "edit_requests": "Edit Requests",
       "my_profile": "My Profile",
+      "payment_api": "Payment API",
+      "nav_cat_main": "Main",
+      "nav_cat_operations": "Operations",
+      "nav_cat_data": "Data & Results",
+      "nav_cat_system": "System",
+      "nav_cat_account": "Account",
+      "system_debug": "System Debug",
 
 
       "platform_overview": "Platform overview",
@@ -327,7 +334,19 @@ const resources = {
       "sender": "Sender",
       "transaction_id": "TrxID",
       "amount": "Amount",
-      "date": "Date"
+      "date": "Date",
+      "payment_api_title": "Payment API Automation",
+      "payment_api_desc": "Configure Android SMS automation and manage API keys",
+      "webhook_url": "Webhook URL",
+      "api_key": "API Key",
+      "rotate_key": "Rotate API Key",
+      "how_to_use": "How to Use",
+      "sms_example": "SMS Automation Example",
+      "webhook_hint": "Set this URL in your Android SMS forwarding app (e.g. SMS to URL)",
+      "api_key_hint": "Include this key in the 'apiKey' field of your POST request",
+      "success_rotate_key": "API Key rotated successfully",
+      "copy_webhook": "Copy Webhook URL",
+      "copy_api_key": "Copy API Key"
     }
   },
   bn: {
@@ -343,6 +362,13 @@ const resources = {
       "sign_out": "প্রস্থান",
       "edit_requests": "সংশোধন অনুরোধ",
       "my_profile": "আমার প্রোফাইল",
+      "payment_api": "পেমেন্ট এপিআই",
+      "nav_cat_main": "মূল মেনু",
+      "nav_cat_operations": "কার্যক্রম",
+      "nav_cat_data": "তথ্য ও ফলাফল",
+      "nav_cat_system": "সিস্টেম",
+      "nav_cat_account": "অ্যাকাউন্ট",
+      "system_debug": "সিস্টেম ডিবাগ",
       "job_applicants": "চাকরির আবেদন",
       "job_applicants_count": "{{count}} চাকরির আবেদন",
       "job_applicants_count_plural": "{{count}} চাকরির আবেদন",
@@ -609,7 +635,19 @@ const resources = {
       "sender": "প্রেরক",
       "transaction_id": "লেনদেন আইডি",
       "amount": "পরিমাণ",
-      "date": "তারিখ"
+      "date": "তারিখ",
+      "payment_api_title": "পেমেন্ট এপিআই অটোমেশন",
+      "payment_api_desc": "অ্যান্ড্রয়েড এসএমএস অটোমেশন কনফিগার করুন এবং এপিআই কী পরিচালনা করুন",
+      "webhook_url": "ওয়েব হুক ইউআরএল",
+      "api_key": "এপিআই কী",
+      "rotate_key": "এপিআই কী পরিবর্তন করুন",
+      "how_to_use": "কিভাবে ব্যবহার করবেন",
+      "sms_example": "এসএমএস অটোমেশন উদাহরণ",
+      "webhook_hint": "আপনার অ্যান্ড্রয়েড এসএমএস ফরওয়ার্ডিং অ্যাপে এই ইউআরএলটি সেট করুন",
+      "api_key_hint": "আপনার পোস্ট রিকোয়েস্টের 'apiKey' ফিল্ডে এই কীটি অন্তর্ভুক্ত করুন",
+      "success_rotate_key": "এপিআই কী সফলভাবে পরিবর্তন করা হয়েছে",
+      "copy_webhook": "ইউআরএল কপি করুন",
+      "copy_api_key": "কী কপি করুন"
     }
   }
 };

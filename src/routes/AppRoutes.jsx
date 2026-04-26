@@ -26,6 +26,7 @@ const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const NotificationCenter = lazy(() => import('../features/system/NotificationCenter'));
 const PaymentLogs = lazy(() => import('../features/system/PaymentLogs'));
 const DebugPage = lazy(() => import('../pages/DebugPage'));
+const PaymentApiPage = lazy(() => import('../pages/PaymentApiPage'));
 
 const AdminLayout = ({ children }) => (
   <div className="admin-root">
@@ -88,6 +89,7 @@ const AppRoutes = () => {
           <Route path="/notifications" element={<NotificationCenter />} />
           <Route path="/payment-logs" element={<PaymentLogs />} />
           <Route path="/logs" element={<DebugPage />} />
+          <Route path="/payment-api" element={<PaymentApiPage />} />
           
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="*" element={<Navigate to="/404" replace />} />

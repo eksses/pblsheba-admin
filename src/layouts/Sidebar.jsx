@@ -4,15 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { SignOut } from '@phosphor-icons/react';
 import { useAuthStore } from '../store/useAuthStore';
 import LangToggle from '../components/layout/LangToggle';
-import { ALL_SIDEBAR_NAV, EMPLOYEE_PRIMARY, EMPLOYEE_MORE } from './navigation';
+import { OWNER_NAVIGATION, EMPLOYEE_NAVIGATION } from './navigation';
 
 const Sidebar = () => {
   const { t } = useTranslation();
   const { logout, user } = useAuthStore();
 
-  const navItems = user?.role === 'owner'
-    ? ALL_SIDEBAR_NAV
-    : [...EMPLOYEE_PRIMARY, ...EMPLOYEE_MORE];
+  const sections = user?.role === 'owner' ? OWNER_NAVIGATION : EMPLOYEE_NAVIGATION;
 
   return (
     <aside className="sidebar">
@@ -29,16 +27,23 @@ const Sidebar = () => {
       </div>
 
       <nav className="sidebar-nav">
-        {navItems.map(({ to, icon: Icon, key }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-          >
-            <Icon size={20} weight="duotone" />
-            {t(key)}
-          </NavLink>
+        {sections.map((section) => (
+          <div key={section.category} className="nav-section">
+            <h3 className="nav-category-title">{t(section.category)}</h3>
+            <div className="nav-section-items">
+              {section.items.map(({ to, icon: Icon, key }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={to === '/'}
+                  className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                >
+                  <Icon size={20} weight="duotone" />
+                  <span>{t(key)}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 

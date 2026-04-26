@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { haptic } from '../../utils/haptic';
 
 const LangToggle = () => {
   const { i18n } = useTranslation();
 
   const toggle = (l) => {
+    haptic('light');
     i18n.changeLanguage(l);
     try {
       localStorage.setItem('pbl_lang', l);

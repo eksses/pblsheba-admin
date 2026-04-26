@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { SignOut } from '@phosphor-icons/react';
 import { useAuthStore } from '../store/useAuthStore';
 import LangToggle from '../components/layout/LangToggle';
+import { haptic } from '../utils/haptic';
 
 const TopBar = () => {
   const { t } = useTranslation();
@@ -14,7 +15,10 @@ const TopBar = () => {
     <header className="top-bar">
       <div 
         className="top-bar-brand" 
-        onClick={() => navigate('/')}
+        onClick={() => {
+          haptic('light');
+          navigate('/');
+        }}
         style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
       >
         <img src="/logo.png" alt="Logo" style={{ width: 26, height: 26, borderRadius: 6 }} />
@@ -24,7 +28,10 @@ const TopBar = () => {
         <LangToggle />
         <button 
           className="btn btn-ghost btn-sm btn-icon" 
-          onClick={logout} 
+          onClick={() => {
+            haptic('medium');
+            logout();
+          }} 
           title={t('sign_out')}
           aria-label="Sign out"
         >
