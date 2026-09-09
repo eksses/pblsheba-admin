@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
+// Default hardcoded backend URL with environment variable override
+const defaultApiUrl = 'https://pblsheba-server.vercel.app/api';
+const baseURL = import.meta.env.VITE_API_URL || defaultApiUrl;
+
 const axiosClient = axios.create({
-  baseURL: import.meta.env.DEV ? 'http://localhost:5000/api' : '/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'

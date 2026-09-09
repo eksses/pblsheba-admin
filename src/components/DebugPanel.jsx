@@ -128,15 +128,9 @@ const DebugPanel = () => {
     const fetchHealth = async () => {
       try {
         const isDev = import.meta.env.DEV;
-        const apiUrl = import.meta.env.VITE_API_URL;
-        
-        let endpoint;
-        if (isDev && apiUrl) {
-          const base = apiUrl.replace(/\/api\/?$/, '');
-          endpoint = `${base}/api/public/health?debug=true`;
-        } else {
-          endpoint = '/api/public/health?debug=true';
-        }
+        const apiUrl = import.meta.env.VITE_API_URL || (isDev ? 'http://localhost:5000/api' : 'https://pblsheba-server.vercel.app/api');
+        const base = apiUrl.replace(/\/api\/?$/, '');
+        const endpoint = `${base}/api/public/health?debug=true`;
 
         const res = await fetch(endpoint);
         if (!res.ok) throw new Error();
