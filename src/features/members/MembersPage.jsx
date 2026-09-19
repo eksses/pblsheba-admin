@@ -115,7 +115,7 @@ const MembersPage = () => {
     }
   };
 
-  const handleExportExcel = async () => {
+  const handleExport = async () => {
     if (filteredList.length === 0) {
       toast.error(t('no_data_to_export'));
       return;
@@ -140,6 +140,8 @@ const MembersPage = () => {
     XLSX.writeFile(wb, `Members_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
     toast.success(t('export_success'));
   };
+
+  const handleExportExcel = handleExport;
 
   const handleDelete = async (id) => {
     setActionId(id);
