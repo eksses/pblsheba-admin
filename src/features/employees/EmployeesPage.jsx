@@ -27,6 +27,7 @@ const EmployeesPage = () => {
     isOwner ? '/admin/employees' : null, 
     []
   );
+  const [list, setList] = useState(() => Array.isArray(serverEmployees) ? serverEmployees : []);
   const [actionId, setActionId] = useState(null);
   
   // Modals & Forms
