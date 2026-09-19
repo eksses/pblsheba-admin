@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, IdentificationCard, FileArrowDown } from '@phosphor-icons/react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
 import { exportToExcel } from '../../utils/excelExport';
 import { haptic } from '../../utils/haptic';
 
@@ -170,6 +167,10 @@ const EmployeesPage = () => {
   const handleDownloadPdf = async (emp) => {
     setGeneratingPdf(true);
     try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ]);
       const canvas = await html2canvas(idCardRef.current, {
         scale: 3,
         useCORS: true,

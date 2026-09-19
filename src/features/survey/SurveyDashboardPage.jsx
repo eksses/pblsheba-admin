@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileArrowDown, ClipboardText } from '@phosphor-icons/react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 import axiosClient from '../../api/axiosClient';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToast } from '../../context/ToastContext';
@@ -52,11 +49,15 @@ const SurveyDashboardPage = () => {
     fetchData();
   }, [filter]);
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     setGenerating(true);
     toast.info(t('starting_pdf_export'));
     
     try {
+      const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable')
+      ]);
       const doc = new jsPDF('portrait');
       
       // Header
@@ -120,9 +121,10 @@ const SurveyDashboardPage = () => {
     }
   };
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
     toast.info(t('starting_excel_export'));
     try {
+      const XLSX = await import('xlsx');
       const ws = XLSX.utils.json_to_sheet(list.map(s => ({
         'SL': '',
         'Name': s.name,

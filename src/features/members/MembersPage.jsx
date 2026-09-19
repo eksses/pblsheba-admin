@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Users, Plus, Pencil, FileArrowDown } from '@phosphor-icons/react';
-import * as XLSX from 'xlsx';
 import axiosClient from '../../api/axiosClient';
 import { useToast } from '../../context/ToastContext';
 import Modal from '../../components/common/Modal';
@@ -116,11 +115,13 @@ const MembersPage = () => {
     }
   };
 
-  const handleExport = () => {
+  const handleExportExcel = async () => {
     if (filteredList.length === 0) {
       toast.error(t('no_data_to_export'));
       return;
     }
+
+    const XLSX = await import('xlsx');
 
     const exportData = filteredList.map(m => ({
       [t('name')]: m.name,

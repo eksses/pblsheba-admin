@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DownloadSimple } from '@phosphor-icons/react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 
 import axiosClient from '../api/axiosClient';
 import { useAuthStore } from '../store/useAuthStore';
@@ -42,6 +40,10 @@ const StaffProfilePage = () => {
     setGeneratingPdf(true);
     toast.info(t('generating_id_card'));
     try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ]);
       const canvas = await html2canvas(idCardRef.current, {
         scale: 3,
         useCORS: true,
