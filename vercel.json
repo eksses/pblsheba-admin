@@ -1,5 +1,25 @@
 {
   "framework": "vite",
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(logo.png|app-icon.png|favicon.png)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://pblsheba-server.vercel.app/api/$1" },
     { "source": "/((?!api|sw.js|manifest.json|assets|favicon.ico|logo.png|app-icon.png).*)", "destination": "/index.html" }

@@ -12,17 +12,25 @@ import MemberForm from './components/MemberForm';
 import MemberEditForm from './components/MemberEditForm';
 import Skeleton from '../../components/ui/Skeleton';
 
+import { useFastData } from '../../hooks/useFastData';
+
 const MembersPage = () => {
   const { t } = useTranslation();
   const toast = useToast();
   const location = useLocation();
   const staffId = new URLSearchParams(location.search).get('staffId');
 
-  // State
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // Fast SWR State
+  const { data: serverMembers, loading, mutate } = useFastData('/admin/members', []);
+  const [list, setList] = useState(serverMembers || []);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  useEffect(() => {
+    if (serverMembers) {
+      setList(Array.isArray(serverMembers) ? serverMembers : []);
+    }
+  }, [serverMembers]);
   
   // Modals & Action State
   const [addOpen, setAddOpen] = useState(false);
@@ -40,21 +48,7 @@ const MembersPage = () => {
   const [form, setForm] = useState(emptyForm);
   const [editForm, setEditForm] = useState(null);
 
-  const fetchMembers = async () => {
-    setLoading(true);
-    try {
-      const { data } = await axiosClient.get('/admin/members');
-      setList(Array.isArray(data) ? data : []);
-    } catch (err) {
-      toast.error(t('error_fetch'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMembers();
-  }, []);
+  const fetchMembers = () => mutate(undefined, true);
 
   const onFormChange = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const onEditFormChange = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
@@ -80,13 +74,18 @@ const MembersPage = () => {
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => v && fd.append(k, v));
-      await axiosClient.post('/admin/members', fd, { 
+      const { data: newMember } = await axiosClient.post('/admin/members', fd, { 
         headers: { 'Content-Type': 'multipart/form-data' } 
       });
       toast.success(t('success_register'));
       setAddOpen(false);
       setForm(emptyForm);
-      fetchMembers();
+      if (newMember) {
+        setList(prev => [newMember, ...prev]);
+        mutate(prev => [newMember, ...(prev || [])]);
+      } else {
+        fetchMembers();
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || t('error_register'));
     } finally {

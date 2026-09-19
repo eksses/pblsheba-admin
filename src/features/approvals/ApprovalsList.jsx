@@ -6,29 +6,23 @@ import { useToast } from '../../context/ToastContext';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import Spinner from '../../components/ui/Spinner';
 
+import { useFastData } from '../../hooks/useFastData';
+
 const ApprovalsList = () => {
   const { t } = useTranslation();
   const toast = useToast();
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(false);
+  
+  // Fast SWR State
+  const { data: serverPending, loading, mutate } = useFastData('/admin/pending', []);
+  const [list, setList] = useState(serverPending || []);
   const [actionId, setActionId] = useState(null);
   const [confirmData, setConfirmData] = useState(null);
 
-  const fetchPending = async () => {
-    setLoading(true);
-    try {
-      const { data } = await axiosClient.get('/admin/pending');
-      setList(data);
-    } catch (err) {
-      toast.error(t('error_fetch'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchPending();
-  }, []);
+    if (serverPending) {
+      setList(Array.isArray(serverPending) ? serverPending : []);
+    }
+  }, [serverPending]);
 
   const handleAction = async (id, type) => {
     setActionId(id);

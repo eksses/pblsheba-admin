@@ -12,27 +12,34 @@ import SurveyCard from './components/SurveyCard';
 import SurveyDetails from './components/SurveyDetails';
 import Skeleton from '../../components/ui/Skeleton';
 
+import { swrCache } from '../../utils/swrCache';
+
 const SurveyDashboardPage = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const toast = useToast();
 
-  const [list, setList] = useState([]);
-  const [stats, setStats] = useState([]);
   const [filter, setFilter] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [list, setList] = useState(() => swrCache.get(`surveys_`) || []);
+  const [stats, setStats] = useState(() => swrCache.get('surveys_stats') || []);
+  const [loading, setLoading] = useState(() => !swrCache.get(`surveys_`));
   const [selectedSurvey, setSelectedSurvey] = useState(null);
   const [generating, setGenerating] = useState(false);
 
   const fetchData = async () => {
-    setLoading(true);
+    const cacheKey = `surveys_${filter}`;
+    if (!swrCache.get(cacheKey) && list.length === 0) setLoading(true);
     try {
       const { data } = await axiosClient.get(`/surveys?employeeId=${filter}`);
-      setList(Array.isArray(data) ? data : []);
+      const safeData = Array.isArray(data) ? data : [];
+      setList(safeData);
+      swrCache.set(cacheKey, safeData);
       
       if (user.role === 'owner') {
         const { data: sData } = await axiosClient.get('/surveys/stats');
-        setStats(Array.isArray(sData) ? sData : []);
+        const safeStats = Array.isArray(sData) ? sData : [];
+        setStats(safeStats);
+        swrCache.set('surveys_stats', safeStats);
       }
     } catch {
       toast.error(t('error_fetch_data'));

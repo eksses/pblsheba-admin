@@ -18,13 +18,18 @@ import EmployeeCard from './components/EmployeeCard';
 import EmployeeForm from './components/EmployeeForm';
 import EmployeeIDCard from './components/EmployeeIDCard';
 
+import { useFastData } from '../../hooks/useFastData';
+
 const EmployeesPage = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const toast = useToast();
 
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const isOwner = user?.role === 'owner';
+  const { data: serverEmployees, loading, mutate } = useFastData(
+    isOwner ? '/admin/employees' : null, 
+    []
+  );
   const [actionId, setActionId] = useState(null);
   
   // Modals & Forms
@@ -42,24 +47,13 @@ const EmployeesPage = () => {
   // PDF Generation
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [pdfTarget, setPdfTarget] = useState(null);
-  const idCardRef = useRef(null);
-
-  const fetchEmployees = async () => {
-    if (user.role !== 'owner') return;
-    setLoading(true);
-    try {
-      const { data } = await axiosClient.get('/admin/employees');
-      setList(data);
-    } catch {
-      toast.error(t('error_fetch'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const idCardRef = React.useRef(null);
 
   useEffect(() => {
-    fetchEmployees();
-  }, [user.role]);
+    if (serverEmployees) {
+      setList(Array.isArray(serverEmployees) ? serverEmployees : []);
+    }
+  }, [serverEmployees]);
 
   // Handle PDF auto-generation when target is set
   useEffect(() => {
@@ -93,15 +87,20 @@ const EmployeesPage = () => {
     setOpen(true);
   };
 
-  const handleToggleStatus = async (emp) => {
-    const id = emp._id || emp.id;
-    const newStatus = emp.status === 'disabled' ? 'active' : 'disabled';
+  const fetchEmployees = () => mutate(undefined, true);
+
+  const handleToggleStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'disabled' ? 'active' : 'disabled';
     setActionId(id);
+    const prevList = list;
+    // Optimistic toggle
+    setList(prev => prev.map(emp => (emp._id || emp.id) === id ? { ...emp, status: newStatus } : emp));
     try {
       await axiosClient.patch(`/admin/users/${id}`, { status: newStatus });
       toast.success(t('success_status_update'));
-      fetchEmployees();
+      mutate(prev => (prev || []).map(emp => (emp._id || emp.id) === id ? { ...emp, status: newStatus } : emp));
     } catch { 
+      setList(prevList);
       toast.error(t('error_status_update'));
     } finally {
       setActionId(null);
@@ -111,15 +110,19 @@ const EmployeesPage = () => {
 
   const handleDelete = async (id) => {
     setActionId(id);
+    const prevList = list;
+    // Optimistic delete
+    setList(prev => prev.filter(emp => (emp._id || emp.id) !== id));
+    setConfirmData(null);
     try {
       await axiosClient.delete(`/admin/users/${id}`);
       toast.success(t('success_delete'));
-      fetchEmployees();
+      mutate(prev => (prev || []).filter(emp => (emp._id || emp.id) !== id));
     } catch { 
+      setList(prevList);
       toast.error(t('error_delete'));
     } finally {
       setActionId(null);
-      setConfirmData(null);
     }
   };
 
@@ -134,18 +137,29 @@ const EmployeesPage = () => {
 
       if (editId) {
         if (!form.password) fd.delete('password');
-        await axiosClient.patch(`/admin/users/${editId}`, fd, { 
+        const { data: updated } = await axiosClient.patch(`/admin/users/${editId}`, fd, { 
           headers: { 'Content-Type': 'multipart/form-data' } 
         });
         toast.success(t('success_update'));
+        if (updated) {
+          setList(prev => prev.map(emp => (emp._id || emp.id) === editId ? { ...emp, ...updated } : emp));
+          mutate(prev => (prev || []).map(emp => (emp._id || emp.id) === editId ? { ...emp, ...updated } : emp));
+        } else {
+          fetchEmployees();
+        }
       } else {
-        await axiosClient.post('/admin/employees', fd, { 
+        const { data: created } = await axiosClient.post('/admin/employees', fd, { 
           headers: { 'Content-Type': 'multipart/form-data' } 
         });
         toast.success(t('success_create_staff'));
+        if (created) {
+          setList(prev => [created, ...prev]);
+          mutate(prev => [created, ...(prev || [])]);
+        } else {
+          fetchEmployees();
+        }
       }
       setOpen(false);
-      fetchEmployees();
     } catch(err) { 
       toast.error(err.response?.data?.message || t('error_save')); 
     } finally { 
