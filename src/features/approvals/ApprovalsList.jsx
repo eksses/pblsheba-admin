@@ -32,6 +32,10 @@ const ApprovalsList = () => {
 
   const handleAction = async (id, type) => {
     setActionId(id);
+    const prevList = list;
+    // Optimistic removal: instantly remove card from view
+    setList(prev => prev.filter(item => (item._id || item.id) !== id));
+    setConfirmData(null);
     try {
       if (type === 'delete') {
         await axiosClient.delete(`/admin/users/${id}`);
@@ -42,12 +46,12 @@ const ApprovalsList = () => {
         await axiosClient.patch(`/admin/approve/${id}`, { status, paymentVerified });
         toast.success(t(type === 'approve' ? 'success_approve' : 'success_reject'));
       }
-      fetchPending();
     } catch (err) {
+      // Rollback on network failure
+      setList(prevList);
       toast.error(t(`error_${type}`));
     } finally {
       setActionId(null);
-      setConfirmData(null);
     }
   };
 

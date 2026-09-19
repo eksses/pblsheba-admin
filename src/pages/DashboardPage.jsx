@@ -200,7 +200,7 @@ const DashboardPage = () => {
   }, []);
 
   useEffect(() => { 
-    setLoading(true);
+    if (!dashboardCache) setLoading(true);
     axiosClient.get('/admin/dashboard')
       .then(r => {
         setMetrics(r.data);
@@ -208,7 +208,7 @@ const DashboardPage = () => {
       })
       .catch(() => {})
       .finally(() => setLoading(false)); 
-  }, [setDashboardCache]);
+  }, [setDashboardCache, dashboardCache]);
 
   const [testPushLoading, setTestPushLoading] = useState(false);
 

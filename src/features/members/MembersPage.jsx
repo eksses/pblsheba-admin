@@ -97,14 +97,20 @@ const MembersPage = () => {
   const submitEdit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    const data = { ...editForm };
+    const memberId = data._id || data.id;
+    const prevList = list;
+    
+    // Optimistic UI update in place
+    setList(prev => prev.map(m => (m._id || m.id) === memberId ? { ...m, ...data } : m));
+    setEditOpen(false);
+    
     try {
-      const data = { ...editForm };
       if (!data.password) delete data.password;
-      await axiosClient.patch(`/admin/users/${data._id || data.id}`, data);
+      await axiosClient.patch(`/admin/users/${memberId}`, data);
       toast.success(t('success_update'));
-      setEditOpen(false);
-      fetchMembers();
     } catch (err) {
+      setList(prevList); // rollback on failure
       toast.error(err.response?.data?.message || t('error_update'));
     } finally {
       setSaving(false);
@@ -137,15 +143,18 @@ const MembersPage = () => {
 
   const handleDelete = async (id) => {
     setActionId(id);
+    const prevList = list;
+    // Optimistically remove member from list
+    setList(prev => prev.filter(m => (m._id || m.id) !== id));
+    setConfirmDelete(null);
     try {
       await axiosClient.delete(`/admin/users/${id}`);
       toast.success(t('success_delete'));
-      fetchMembers();
     } catch (err) {
+      setList(prevList); // rollback on error
       toast.error(t('error_delete'));
     } finally {
       setActionId(null);
-      setConfirmDelete(null);
     }
   };
 
