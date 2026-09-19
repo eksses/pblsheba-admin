@@ -17,7 +17,7 @@ const Sidebar = () => {
       <div className="sidebar-brand">
         <div className="sidebar-brand-icon">
           <div className="sidebar-icon-wrap">
-            <img src="/logo.png" alt="PBL Sheba" style={{ width: 24, height: 24, borderRadius: 4 }} />
+            <img src="/logo.png" alt="Trust Unity BD" style={{ width: 24, height: 24, borderRadius: 4 }} />
           </div>
           <div>
             <h2>{t('brand_name')}</h2>

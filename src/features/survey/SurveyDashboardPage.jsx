@@ -55,7 +55,7 @@ const SurveyDashboardPage = () => {
       // Header
       doc.setFontSize(22);
       doc.setTextColor(34, 197, 94);
-      doc.text('PBL SHEBA', 105, 20, { align: 'center' });
+      doc.text('TRUST UNITY BD', 105, 20, { align: 'center' });
       
       doc.setFontSize(14);
       doc.setTextColor(50, 50, 50);
@@ -99,10 +99,10 @@ const SurveyDashboardPage = () => {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150);
-        doc.text(`PBL Sheba Official Document - Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        doc.text(`Trust Unity BD Official Document - Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
       }
 
-      const fileName = `PBL_Sheba_Surveys_${dateStr.replace(/\//g, '-')}.pdf`;
+      const fileName = `Trust_Unity_BD_Surveys_${dateStr.replace(/\//g, '-')}.pdf`;
       doc.save(fileName);
       toast.success(t('pdf_export_success'));
     } catch (err) {
@@ -131,7 +131,7 @@ const SurveyDashboardPage = () => {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Surveys");
       const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
-      XLSX.writeFile(wb, `PBL_Sheba_Surveys_${dateStr}.xlsx`);
+      XLSX.writeFile(wb, `Trust_Unity_BD_Surveys_${dateStr}.xlsx`);
       toast.success(t('excel_export_success'));
     } catch (err) {
       console.error('Excel Export Error:', err);

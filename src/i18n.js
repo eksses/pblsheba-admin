@@ -158,7 +158,7 @@ const resources = {
       "set_password": "Set Password",
 
 
-      "brand_name": "PBL Sheba",
+      "brand_name": "Trust Unity BD",
       "brand_tagline": "Community Care Platform",
       "member_form_desc": "Fill in the member's personal details and payment information to register them.",
       "staff_form_desc": "Create an operator account. They'll be prompted to set their own password on first login.",
@@ -225,7 +225,7 @@ const resources = {
       "nominee_details": "Nominee Details",
       "set_new_password": "Set New Password",
       "permanent_password_desc": "Set a new password before you continue",
-      "admin_subtitle": "PBL Sheba Management Portal",
+      "admin_subtitle": "Trust Unity BD Management Portal",
       "sign_in": "Sign In",
       "use_credentials": "Enter your credentials to access the dashboard",
       "phone_id": "Phone / ID",
@@ -470,7 +470,7 @@ const resources = {
       "set_password": "পাসওয়ার্ড সেট করুন",
 
 
-      "brand_name": "পিবিএল সেবা",
+      "brand_name": "ট্রাস্ট ইউনিটি বিডি",
       "brand_tagline": "কমিউনিটি কেয়ার প্ল্যাটফর্ম",
       "member_form_desc": "সদস্যের ব্যক্তিগত তথ্য এবং পেমেন্ট বিবরণ পূরণ করে নিবন্ধন সম্পন্ন করুন।",
       "staff_form_desc": "একটি অপারেটর অ্যাকাউন্ট তৈরি করুন। তাদের প্রথম লগইনে পাসওয়ার্ড পরিবর্তন করতে বলা হবে।",
@@ -537,7 +537,7 @@ const resources = {
       "nominee_details": "নমিনীর বিবরণ",
       "set_new_password": "নতুন পাসওয়ার্ড সেট করুন",
       "permanent_password_desc": "চালিয়ে যাওয়ার আগে নতুন পাসওয়ার্ড সেট করুন",
-      "admin_subtitle": "পিবিএল সেবা ম্যানেজমেন্ট পোর্টাল",
+      "admin_subtitle": "ট্রাস্ট ইউনিটি বিডি ম্যানেজমেন্ট পোর্টাল",
       "sign_in": "সাইন ইন",
       "use_credentials": "ড্যাশবোর্ডে প্রবেশ করতে আপনার তথ্য প্রদান করুন",
       "phone_id": "ফোন / আইডি",

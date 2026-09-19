@@ -61,7 +61,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   console.log('[SW] Push Received', event);
   
-  let title = 'PBL Sheba';
+  let title = 'Trust Unity BD';
   let body = 'You have a new update';
   let pushData = null;
 

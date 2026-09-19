@@ -9,7 +9,7 @@ const EmployeeIDCard = forwardRef(({ employee }, ref) => {
     <div className="idc-hide">
       <div ref={ref} className="id-card-employee">
         <div className="idce-header">
-          <div className="idce-title">PBL Sheba Somaj</div>
+          <div className="idce-title">Trust Unity BD</div>
           <div className="idce-subtitle">Staff ID Card</div>
         </div>
         <div className="idce-body">

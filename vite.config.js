@@ -24,9 +24,9 @@ export default defineConfig({
       },
       includeAssets: ['app-icon.png', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'PBL Sheba Admin Panel',
-        short_name: 'Sheba Admin',
-        description: 'Admin panel for PBL Sheba member management',
+        name: 'Trust Unity BD Admin Panel',
+        short_name: 'Trust Unity Admin',
+        description: 'Admin panel for Trust Unity BD member management',
         theme_color: '#1e293b',
         background_color: '#f8fafc',
         display: 'standalone',
